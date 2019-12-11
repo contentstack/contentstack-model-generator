@@ -1,0 +1,31 @@
+﻿<Properties StartupConfiguration="{53B23578-325E-4519-A339-DF3A712DFAE9}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="ModelGenerator.cs">
+    <Files>
+      <File FileName="Program.cs" Line="15" Column="14" />
+      <File FileName="ModelGenerator.cs" Line="76" Column="48" />
+      <File FileName="Model/Contenttype.cs" />
+      <File FileName="Model/Field.cs" />
+      <File FileName="Model/MetaData.cs" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="contentstack.model.generator" expanded="True">
+            <Node name="contentstack.model.generator" expanded="True">
+              <Node name="ModelGenerator.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.ItemProperties.contentstack.model.generator PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <Debugger.DebugSourceFolders />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+  <AuthorInfo Name="Contentstack" Email="" Copyright="Copyright © 2012-2019 Contentstack. All Rights Reserved" Company="Contentstack" Trademark="" />
+</Properties>
