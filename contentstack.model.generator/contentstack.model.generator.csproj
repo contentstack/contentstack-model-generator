@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <Copyright>Copyright © 2012-2019 Contentstack. All Rights Reserved</Copyright>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageLicenseUrl>https://github.com/contentstack/contentstack-model-generator/blob/master/LICENSE</PackageLicenseUrl>
+    <Owners>Contentstack</Owners>
+    <PackageProjectUrl>https://github.com/contentstack/contentstack-model-generator.git</PackageProjectUrl>
+    <PackAsTool>true</PackAsTool>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.4.4" />
+    <PackageReference Include="contentstack.csharp" Version="2.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove=".DS_Store" />
+  </ItemGroup>
+</Project>
