@@ -3,16 +3,23 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <PackageId>contentstack.model.generator</PackageId>
     <Copyright>Copyright © 2012-2019 Contentstack. All Rights Reserved</Copyright>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <PackageLicenseUrl>https://github.com/contentstack/contentstack-model-generator/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicense>https://github.com/contentstack/contentstack-model-generator/blob/master/LICENSE</PackageLicense>
     <Owners>Contentstack</Owners>
     <PackageProjectUrl>https://github.com/contentstack/contentstack-model-generator.git</PackageProjectUrl>
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
-
+    <PackOnBuild>true</PackOnBuild>
+    <PackageVersion>0.1.0</PackageVersion>
+    <Authors>Contentstack</Authors>
+    <ReleaseVersion>0.1.0</ReleaseVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType></DebugType>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.4.4" />
     <PackageReference Include="contentstack.csharp" Version="2.2.0" />

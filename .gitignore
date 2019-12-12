@@ -15,7 +15,9 @@ Backup/
 *.orig
 packages/
 */.DS_Store
+.DS_Store
 *.config
 *.nupkg
 *.nuspec
 *.trx
+*/nupkg
