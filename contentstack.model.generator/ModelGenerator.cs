@@ -186,12 +186,11 @@ using Contentstack.Core.Models;
                     return "bool";
                 case "reference":
                     return GetDatatypeForContentType(field);
-                case "global_field":
-                    return GetDatatypeForContentType(field);
+                //case "global_field":
+                //    return GetDatatypeForContentType(field);
                 default:
                     break;
             }
-            Console.WriteLine($"Field Type {field.DataType}");
             return "object";
         }
 
