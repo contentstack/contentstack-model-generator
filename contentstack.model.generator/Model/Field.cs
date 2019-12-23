@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace contentstack.model.generator.Model
@@ -22,5 +22,8 @@ namespace contentstack.model.generator.Model
         [JsonProperty(PropertyName = "field_metadata")]
         public MetaData Fieldmetadata;
 
+        public List<Contenttype> Blocks;
+
+        public List<Field> Schema;
     }
 }

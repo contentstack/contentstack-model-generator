@@ -9,6 +9,6 @@ namespace contentstack.model.generator.Model
 
        public string Uid { get; set; }
 
-       public List<Field> schema { get; set; }
+       public List<Field> Schema { get; set; }
     }
 }

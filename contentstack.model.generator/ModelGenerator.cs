@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using contentstack.CMA;
 using contentstack.model.generator.Model;
-using Contentstack.Core;
-using Contentstack.Core.Configuration;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 
@@ -22,13 +22,9 @@ namespace contentstack.model.generator
         [Required(ErrorMessage = "You must specify the Contentstack API key for the Content Delivery API")]
         public string ApiKey { get; set; }
 
-        [Option(CommandOptionType.SingleValue, ShortName = "d", LongName = "DeliveryToken", Description = "The Delivery token for the Content Delivery API")]
+        [Option(CommandOptionType.SingleValue, ShortName = "d", LongName = "delivery-token", Description = "The Delivery token for the Content Delivery API")]
         [Required(ErrorMessage = "You must specify the Contentstack API key for the Content Delivery API")]
-        public string AccessToken { get; set; }
-
-        [Option(CommandOptionType.SingleValue, Description = "The Environment fetch the content type from")]
-        [Required(ErrorMessage = "You must specify the Contentstack API key for the Content Delivery API")]
-        public string Environment { get; set; }
+        public string DeliveryToken { get; set; }
 
         [Option(CommandOptionType.SingleOrNoValue, Description = "The Contentstack Host for the Content Delivery API")]
         public string Host { get; set; } = "api.contentstack.io";
@@ -39,7 +35,13 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.NoValue, Description = "Automatically overwrite files that already exist")]
         public bool Force { get; }
 
-        [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
+        [Option(CommandOptionType.SingleValue, Description = "The Modular block Class Prefix.")]
+        public string ModularBlockPrefix { get; } = "MB";
+
+        [Option(CommandOptionType.SingleValue, Description = "The Modular block Class Prefix.")]
+        public string GroupPrefix { get; } = "Group";
+
+        [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in.")]
         public string Path { get; }
 
         [VersionOption("0.1")]
@@ -51,9 +53,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Contentstack.Core.Models;
-";
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;";
 
         private List<Contenttype> _contentTypes;
+        private Dictionary<string, List<Contenttype>> _modularBlocks = new Dictionary<string, List<Contenttype>>();
 
         public async Task<int> OnExecute(CommandLineApplication app, IConsole console)
         {
@@ -61,32 +66,36 @@ using Contentstack.Core.Models;
             var options = new ContentstackOptions
             {
                 ApiKey = ApiKey,
-                AccessToken = AccessToken,
-                Environment = Environment,
+                AccessToken = DeliveryToken,
                 Host = Host
             };
             var client = new ContentstackClient(options);
 
-            Console.WriteLine($"Fetching content types from {ApiKey}");
-            Console.ResetColor();
             try
             {
-                var list = await client.GetContentTypes();
-                console.WriteLine(list);
-                var json = JsonConvert.SerializeObject(list);
-                _contentTypes = JsonConvert.DeserializeObject<List<Contenttype>>(json);
+                Console.WriteLine($"Fetching Content Types from {ApiKey}");
+                var contentType = await client.GetContentTypes();
+                var ContentTypeJson = JsonConvert.SerializeObject(contentType);
+                _contentTypes = JsonConvert.DeserializeObject<List<Contenttype>>(ContentTypeJson);
+                Console.WriteLine($"Found {_contentTypes.Count} content types.");
+
+                Console.WriteLine($"Fetching Global Fields from {ApiKey}");
+                var globalField = await client.GetGlobalFields();
+                var globalFieldsJson = JsonConvert.SerializeObject(globalField);
+                var globalFields = JsonConvert.DeserializeObject<List<Contenttype>>(globalFieldsJson);
+                _contentTypes.AddRange(globalFields);
+                Console.WriteLine($"Found {globalFields.Count} Global Fields.");
             }
             catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine("There was an error communicating with the Contentstack API: " + e.Message);
                 Console.Error.WriteLine("Please verify that your api key, delivery token and environment are correct");
-                Console.ResetColor();
                 return Program.ERROR;
             }
+            Console.ResetColor();
 
             var path = "";
-            Console.WriteLine($"Found {_contentTypes.Count} content types.");
             if (string.IsNullOrEmpty(Path))
             {
                 path = Directory.GetCurrentDirectory();
@@ -97,80 +106,29 @@ using Contentstack.Core.Models;
                 Console.WriteLine($"Path specified. Files will be created at {Path}");
                 path = Path;
             }
-
-            var dir = new DirectoryInfo(path);
-            if (dir.Exists == false)
-            {
-                Console.WriteLine($"Path {path} does not exist and will be created.");
-                dir.Create();
-            }
+            path = $"{path}/Models";
+            DirectoryInfo dir = CreateDirectory(path);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Generating files from content type");
             Console.ResetColor();
 
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            CreateLinkClass(Namespace, dir);
             foreach (var contentType in _contentTypes)
             {
-                string fileName = GetFileName(contentType.Title);
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.WriteLine($"Adding File {fileName} to {dir.Name}.");
-
-                var file = new FileInfo($"{dir.FullName}{System.IO.Path.DirectorySeparatorChar}{fileName}.cs");
-                if (file.Exists && !Force)
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    var prompt = Prompt.GetYesNo($"The folder already contains a file with the name {file.Name}. Do you want to overwrite it?", true);
-                    Console.ResetColor();
-                    if (prompt == false)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"Skipping {file.Name}");
-                        Console.ResetColor();
-                    }
-                }
-
-                using (var sw = file.CreateText())
-                {
-                    var sb = new StringBuilder();
-                    sb.AppendLine(_templateStart);
-                    sb.AppendLine($"namespace {Namespace}");
-                    //start namespace
-                    sb.AppendLine("{");
-
-                    sb.AppendLine($"    public class {FormatClassName(contentType.Title)}");
-                    //start class
-                    sb.AppendLine("    {");
-
-                    foreach (var field in contentType.schema)
-                    {
-                        if (field.DataType == "global_field") {
-                            console.WriteLine(contentType.schema);
-                        }
-                        sb.AppendLine($"        public {GetDatatypeForField(field)} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}");
-                    }
-
-                    //end class
-                    sb.AppendLine("    }");
-                    //end namespace
-                    sb.AppendLine("}");
-
-                    sw.WriteLine(sb.ToString());
-                }
+                CreateFile(FormatClassName(contentType.Title), Namespace, contentType, dir);
             }
-
+            
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Files successfully created!");
             Console.ResetColor();
-
+            Console.WriteLine($"Opening {path}");
+            OpenFolderatPath(path);
             return Program.OK;
         }
 
-        private Dictionary<T1, T2> Dictionary<T1, T2>()
-        {
-            throw new NotImplementedException();
-        }
-
-        private string GetDatatype(Field field)
+        private string GetDatatype(Field field, string contentTypeName)
         {
             switch (field.DataType)
             {
@@ -184,19 +142,26 @@ using Contentstack.Core.Models;
                     return "Asset";
                 case "boolean":
                     return "bool";
+                case "link":
+                    return "ContentstackLink";
                 case "reference":
                     return GetDatatypeForContentType(field);
-                //case "global_field":
-                //    return GetDatatypeForContentType(field);
+                case "global_field":
+                    return GetDatatypeForContentType(field);
+                case "blocks":
+                    return GetDataTypeForModularBlock(field, contentTypeName);
+                case "group":
+                    return GetDataTypeForGroup(field, contentTypeName);
                 default:
+                    Console.WriteLine(field.DataType);
                     break;
             }
             return "object";
         }
 
-        private string GetDatatypeForField(Field field)
+        private string GetDatatypeForField(Field field, string contentTypeName)
         {
-            string dataType = GetDatatype(field);
+            string dataType = GetDatatype(field, contentTypeName);
             return field.Fieldmetadata != null && field.Fieldmetadata.RefMultiple
                 ? $"List<{ dataType }>"
                 : (field.IsMultiple ? $"List<{ dataType }>" : dataType);
@@ -210,7 +175,7 @@ using Contentstack.Core.Models;
                 Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
                 if (contentType != null)
                 {
-                    return GetFileName(contentType.Title);
+                    return FormatClassName(contentType.Title);
                 }
             }
             return "object";
@@ -223,11 +188,6 @@ using Contentstack.Core.Models;
                 return $" = {field.Fieldmetadata.Defaultvalue};";
             }
             return "";
-        }
-
-        private string GetFileName(string fileName)
-        {
-            return string.Join("-", FirstLetterToUpperCase(fileName).Replace(" ", "").Split(System.IO.Path.GetInvalidFileNameChars()));
         }
 
         private string FormatClassName(string name)
@@ -244,10 +204,363 @@ using Contentstack.Core.Models;
         {
             if (string.IsNullOrEmpty(s))
                 return s;
+            var value = s.Replace("_", " ");
+            return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value).Replace(" ", "");
+        }
+        private void OpenFolderatPath(string path)
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+            {
+                FileName = path,
+                UseShellExecute = true,
+                Verb = "open"
+            });
+        }
 
-            char[] a = s.ToCharArray();
-            a[0] = char.ToUpper(a[0]);
-            return new string(a);
+        private string GetDataTypeForModularBlock(Field field, string contentTypeName)
+        {
+            return $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}";
+        }
+
+        private string GetDataTypeForGroup(Field field, string contentTypeName)
+        {
+            return $"{GroupPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}";
+        }
+
+        private void CreateLinkClass(string NameSpace, DirectoryInfo directoryInfo)
+        {
+            // Create File for LinkClass
+            string contentstackLinkClass = "ContentstackLink";
+            var file = shouldCreateFile(contentstackLinkClass, directoryInfo);
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+                    // Adding using at start of file
+                    AddUsingDirectives(null, sb);
+
+                    // Creating namespace 
+                    AddNameSpace($"{NameSpace}.{directoryInfo.Name}", sb);
+
+                    // Creating Class
+                    AddClass(contentstackLinkClass, sb);
+
+                    sb.AppendLine("         public string Title { get; set; }");
+                    sb.AppendLine("         public string Url { get; set; }");
+
+                    // End of namespace and class
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+        }
+
+        private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo, string extendsClass = null)
+        {
+
+            Console.WriteLine($"Extracting Modular Blocks in {contentTypeName}.");
+
+            // Get modular Block within ContentType
+            var usingDirectiveList = new List<string>();
+            string modularUsingDirective = CreateModularBlocks(nameSpace, contentTypeName, contentType.Schema, directoryInfo);
+            if (modularUsingDirective != null)
+            {
+                usingDirectiveList.Add(modularUsingDirective);
+            }
+
+            Console.WriteLine($"Extracting Groups in {contentTypeName}.");
+
+            string grpupUsingDirective = CreateGroup(nameSpace, contentTypeName, contentType.Schema, directoryInfo);
+            usingDirectiveList.Add(grpupUsingDirective);
+
+            // Create File for ContentType
+            var file = shouldCreateFile(contentTypeName, directoryInfo);
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+                    // Adding using at start of file
+                    AddUsingDirectives(usingDirectiveList, sb);
+
+                    // Creating namespace 
+                    AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
+
+                    // Creating Class
+                    AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
+
+                    //Adding Params to contentType
+                    AddParams(contentType.Title, contentType.Schema, sb);
+
+                    // End of namespace and class
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+        }
+
+        private FileInfo shouldCreateFile (string fileName, DirectoryInfo directoryInfo)
+        {
+            var file = new FileInfo($"{directoryInfo.FullName}{System.IO.Path.DirectorySeparatorChar}{fileName}.cs");
+            if (file.Exists && !Force)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                var prompt = Prompt.GetYesNo($"The folder already contains a file with the name {file.Name}. Do you want to overwrite it?", true);
+                Console.ResetColor();
+                if (prompt == false)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Skipping {file.Name}");
+                    Console.ResetColor();
+                    return null;
+                }
+            }
+            Console.WriteLine($"Adding File {fileName} to {directoryInfo.FullName}.");
+            return file;
+        }
+
+        private DirectoryInfo CreateDirectory(string path)
+        {
+            var dir = new DirectoryInfo(path);
+            if (dir.Exists == false)
+            {
+                Console.WriteLine($"Path {path} does not exist and will be created.");
+                dir.Create();
+            }
+            return dir;
+        }
+
+        private string CreateModularBlocks(string nameSpace, string contentTypeName, List<Field> fields, DirectoryInfo directoryInfo)
+        {
+
+            var tuple = ExtractFieldType("blocks", contentTypeName, fields, nameSpace, directoryInfo);
+            string modularUsingDirective = tuple.Item1;
+            string modularNameSpace = tuple.Item2;
+            DirectoryInfo directory = tuple.Item3;
+            var modularBlockFields = tuple.Item4;
+
+            foreach (var mb in modularBlockFields)
+            {
+                var blockTypes = new Dictionary<string, string>();
+                var modularBlockMainClass = GetDataTypeForModularBlock(mb, contentTypeName);
+
+                foreach (var contentT in mb.Blocks)
+                {
+                    string className = $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(contentT.Title)}";
+                    blockTypes[contentT.Uid] = className;
+                    CreateFile(className, modularNameSpace, contentT, directory, modularBlockMainClass);
+                }
+
+                if (blockTypes.Count > 0)
+                {
+                    var enumName = $"{modularBlockMainClass}Enum";
+                    CreateModularBlockEnum(enumName, modularNameSpace, blockTypes, directory);
+                    CreateModularBlockClass(modularBlockMainClass, modularNameSpace, enumName, directory);
+                }
+                // create converter
+            }
+            return modularUsingDirective;
+        }
+
+        private string CreateGroup(string nameSpace, string contentTypeName, List<Field> fields, DirectoryInfo directoryInfo)
+        {
+            var tuple = ExtractFieldType("group", contentTypeName, fields, nameSpace, directoryInfo);
+            string groupusingDirective = tuple.Item1;
+            string groupNameSpace = tuple.Item2;
+            DirectoryInfo directory = tuple.Item3;
+            var groupFields = tuple.Item4;
+
+            foreach (var group in groupFields)
+            {
+                var groupNameClass = GetDataTypeForGroup(group, contentTypeName);
+                CreateGroupClass(groupNameClass, groupNameSpace, group, directory);
+            }
+            return groupusingDirective;
+        }
+
+        private Tuple<string, string, DirectoryInfo, List<Field>> ExtractFieldType(string type, string contentTypeName, List<Field> Schema, string nameSpace, DirectoryInfo directoryInfo)
+        {
+            string usingDirective = null;
+            DirectoryInfo directory = null;
+            string NameSpace = null;
+
+            var fields = Schema.FindAll(field =>
+            {
+                return field.DataType == type;
+            });
+
+
+            if (fields.Count > 0)
+            {
+                directory = CreateDirectory($"{directoryInfo.FullName}/{contentTypeName}{FirstLetterToUpperCase(type)}");
+                NameSpace = $"{nameSpace}.{directoryInfo.Name}";
+                usingDirective = $"using {NameSpace}.{directory.Name};";
+            }
+            return new Tuple<string, string, DirectoryInfo, List<Field>>(usingDirective, NameSpace, directory, fields);
+        }
+
+        private void AddParams(string contentType, List<Field> schema, in StringBuilder sb)
+        {
+            foreach (var field in schema)
+            {
+                if (field.Uid.Contains("_"))
+                {
+                    sb.AppendLine($"        [JsonProperty(propertyName: \"{field.Uid}\")]");
+                }
+                sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}");
+            }
+        }
+
+        private void AddEnd(in StringBuilder sb)
+        {
+            //end class/ enum
+            sb.AppendLine("    }");
+            //end namespace
+            sb.AppendLine("}");
+        }
+
+        private void AddUsingDirectives (List<string> usingDirective, in StringBuilder sb)
+        {
+            sb.AppendLine(_templateStart);
+            if (usingDirective != null)
+            {
+                foreach (var directive in usingDirective)
+                {
+                    sb.AppendLine(directive);
+                }
+            }
+            sb.AppendLine($"");
+        }
+
+        private void AddNameSpace(string nameSpace, in StringBuilder sb)
+        {
+            sb.AppendLine($"namespace {nameSpace}");
+            sb.AppendLine("{");     
+        }
+
+        private void AddClass(string contentTypeName, in StringBuilder sb)
+        {
+            //start class
+            sb.AppendLine($"    public class {contentTypeName}");
+            sb.AppendLine("    {");
+        }
+
+        private void AddEnum(string enumName, in StringBuilder sb)
+        {
+            //start class
+            sb.AppendLine($"    public enum {enumName}");
+            sb.AppendLine("    {");
+        }
+
+        private void CreateGroupClass(string groupName, string nameSpace, Field field, DirectoryInfo directoryInfo)
+        {
+            Console.WriteLine($"Extracting Modular Blocks in {groupName}.");
+
+            // Get modular Block within Group
+            var usingDirectiveList = new List<string>();
+            string modularUsingDirective = CreateModularBlocks(nameSpace, groupName, field.Schema, directoryInfo);
+            if (modularUsingDirective != null)
+            {
+                usingDirectiveList.Add(modularUsingDirective);
+            }
+
+            Console.WriteLine($"Extracting Groups in {groupName}.");
+            // Get Group within Group
+            string grpupUsingDirective = CreateGroup(nameSpace, groupName, field.Schema, directoryInfo);
+            usingDirectiveList.Add(grpupUsingDirective);
+
+            FileInfo file = shouldCreateFile(groupName, directoryInfo);
+
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+
+                    // Adding using at start of file
+                    AddUsingDirectives(usingDirectiveList, sb);
+
+                    // Creating namespace 
+                    AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
+
+                    AddClass(groupName, sb);
+
+                    //Adding Params to contentType
+                    AddParams(groupName, field.Schema, sb);
+
+
+                    // End of namespace and Enum
+                    AddEnd(sb);
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+        }
+        private void CreateModularBlockClass(string modularBlockClassName, string nameSpace, string enumName, DirectoryInfo directoryInfo)
+        {
+            FileInfo file = shouldCreateFile(modularBlockClassName, directoryInfo);
+
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+
+                    // Creating namespace 
+                    AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
+
+                    AddClass(modularBlockClassName, sb);
+
+                    sb.AppendLine($"        private {enumName} blockType;");
+                    sb.AppendLine($"        public {enumName} BlockType {{ get => blockType; set => blockType = value; }}");
+
+                    // End of namespace and Enum
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+        }
+
+        private void CreateModularBlockEnum(string enumName, string nameSpace, Dictionary<string, string> blockTypes, DirectoryInfo directoryInfo)
+        {
+            FileInfo file = shouldCreateFile(enumName, directoryInfo);
+
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+
+                    sb.AppendLine("using System.ComponentModel;");
+
+                    // Creating namespace 
+                    AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
+                    // Creating Enum
+                    AddEnum(enumName, sb);
+
+                    var count = blockTypes.Count;
+                    foreach (var blocks in blockTypes)
+                    {
+                        count--;
+                        var appendEnd = count == 0 ? "" : ",";
+                        sb.AppendLine($"        [DisplayName(displayName: \"{blocks.Key}\")]");
+                        sb.AppendLine($"        {FirstLetterToUpperCase(blocks.Key)}{appendEnd}");
+                    }
+
+                    // End of namespace and Enum
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
         }
     }
 }
