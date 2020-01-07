@@ -15,6 +15,9 @@
     <PackageVersion>0.1.0</PackageVersion>
     <Authors>Contentstack</Authors>
     <ReleaseVersion>0.1.0</ReleaseVersion>
+    <RootNamespace>Contentstack.Model.Generator</RootNamespace>
+     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageReleaseNotes>Contentstack model generator for .Net</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -26,9 +29,12 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove=".DS_Store" />
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="CMA\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="LICENSE.txt" />
+  </ItemGroup>
+   <ItemGroup>
+        <None Include="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+    </ItemGroup>
 </Project>
