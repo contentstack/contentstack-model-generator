@@ -204,7 +204,7 @@ using Newtonsoft.Json.Linq;";
         {
             if (string.IsNullOrEmpty(s))
                 return s;
-            var value = s.Replace("_", " ");
+            var value = Regex.Replace(s, @"[\d-]","").Replace("_", " ");
             return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value).Replace(" ", "");
         }
         private void OpenFolderatPath(string path)
@@ -219,12 +219,12 @@ using Newtonsoft.Json.Linq;";
 
         private string GetDataTypeForModularBlock(Field field, string contentTypeName)
         {
-            return $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}";
+            return $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ","");
         }
 
         private string GetDataTypeForGroup(Field field, string contentTypeName)
         {
-            return $"{GroupPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}";
+            return $"{GroupPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ", "");
         }
 
         private void CreateLinkClass(string NameSpace, DirectoryInfo directoryInfo)
@@ -293,7 +293,7 @@ using Newtonsoft.Json.Linq;";
                     AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
 
                     //Adding Params to contentType
-                    AddParams(contentType.Title, contentType.Schema, sb);
+                    AddParams(contentTypeName, contentType.Schema, sb);
 
                     // End of namespace and class
                     AddEnd(sb);
@@ -363,7 +363,6 @@ using Newtonsoft.Json.Linq;";
                     CreateModularBlockClass(modularBlockMainClass, modularNameSpace, enumName, directory);
                 }
                 CreateModularBlockConverter(modularNameSpace, modularBlockMainClass, blockTypes, directory);
-                // create converter
             }
             return modularUsingDirective;
         }
@@ -637,7 +636,7 @@ using Newtonsoft.Json.Linq;";
                         string blockClass = blocks.Value;
                         sb.AppendLine($"            if (ContentstackHelper.FieldExists(ContentstackHelper.GetDescription({className}Enum.{blockTypeName}), jObject))");
                         sb.AppendLine("             {");
-                        sb.AppendLine($"                 {className} block = new {className}();");
+                        sb.AppendLine($"                 {blockClass} block = new {blockClass}();");
                         sb.AppendLine($"                 block.BlockType = {className}Enum.{blockTypeName};");
                         sb.AppendLine($"                 return block;");
                         sb.AppendLine("             }");
@@ -648,7 +647,7 @@ using Newtonsoft.Json.Linq;";
                     sb.AppendLine($"        public override {className} ReadJson(JsonReader reader, Type objectType, {className} existingValue, bool hasExistingValue, JsonSerializer serializer)");
                     sb.AppendLine("        {");
                     sb.AppendLine("             JObject jObject = JObject.Load(reader);");
-                    sb.AppendLine("             {className} target = Create(objectType, jObject);");
+                    sb.AppendLine($"             {className} target = Create(objectType, jObject);");
                     sb.AppendLine("             serializer.Populate(jObject.GetValue(target.GetModularBlockType()).CreateReader(), target);");
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
