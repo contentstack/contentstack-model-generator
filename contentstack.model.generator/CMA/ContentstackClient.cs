@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Linq;
@@ -53,42 +52,6 @@ namespace contentstack.CMA
         }
         private Dictionary<string, object> _StackHeaders = new Dictionary<string, object>();
 
-        /// <summary>
-        /// Initializes a instance of the <see cref="ContentstackClient"/> class. 
-        /// </summary>
-        /// <param name="options"> used to get stack details via class <see cref="ContentstackOptions"/> to create client.</param>
-        /// <example>
-        /// <code>
-        ///     //&quot;blt5d4sample2633b&quot; is a dummy Stack API key
-        ///     //&quot;blt6d0240b5sample254090d&quot; is dummy access token.
-        ///     var options = new ContentstackOptions()
-        ///     {
-        ///        ApiKey = &quot;api_key&quot;,
-        ///        AccessToken = &quot;access_token&quot;
-        ///        Environment = &quot;environment&quot;
-        ///      }
-        ///     ContentstackClient stack = new ContentstackClient(options);
-        ///     ContentType contentType = stack.ContentType(&quot;contentType_name&quot;);
-        /// </code>
-        /// </example>
-        public ContentstackClient(IOptions<ContentstackOptions> options)
-        {
-            _options = options.Value;
-            this.StackApiKey = _options.ApiKey;
-            this._LocalHeaders = new Dictionary<string, object>();
-            this.SetHeader("api_key", _options.ApiKey);
-            this.SetHeader("access_token", _options.AccessToken);
-            Config cnfig = new Config();
-            if (_options.Host != null)
-            {
-                cnfig.Host = _options.Host;
-            }
-            if (_options.Version != null)
-            {
-                cnfig.Version = _options.Version;
-            }
-            this.SetConfig(cnfig);
-        }
         public void SetHeader(string key, string value)
         {
             if (key != null & value != null)
@@ -99,36 +62,23 @@ namespace contentstack.CMA
             }
 
         }
-        public ContentstackClient(ContentstackOptions options) :
-            this(new OptionsWrapper<ContentstackOptions>(options))
+        public ContentstackClient(ContentstackOptions options)
         {
-
-
-        }
-
-        /// <summary>
-        /// Initializes a instance of the <see cref="ContentstackClient"/> class. 
-        /// </summary>
-        /// <param name="apiKey">API Key of your stack on Contentstack.</param>
-        /// <param name="accessToken">Accesstoken of your stack on Contentstack.</param>
-        /// <example>
-        /// <code>
-        ///     //&quot;blt5d4sample2633b&quot; is a dummy Stack API key
-        ///     //&quot;blt6d0240b5sample254090d&quot; is dummy access token.
-        ///     ContentstackClient stack = new ContentstackClient(&quot;blt5d4sample2633b&quot;, &quot;blt6d0240b5sample254090d&quot;);
-        ///     ContentType contentType = stack.ContentType(&quot;contentType_name&quot;);
-        /// </code>
-        /// </example>
-        public ContentstackClient(string apiKey, string accessToken, string host = null, string version = null) :
-        this(new OptionsWrapper<ContentstackOptions>(new ContentstackOptions()
+            _options = options;
+            this.StackApiKey = _options.ApiKey;
+            this._LocalHeaders = new Dictionary<string, object>();
+            this.SetHeader("api_key", _options.ApiKey);
+            this.SetHeader("access_token", _options.AccessToken);
+        Config cnfig = new Config();
+            if (_options.Host != null)
             {
-                ApiKey = apiKey,
-                AccessToken = accessToken,
-                Host = host,
-                Version = version
+                cnfig.Host = _options.Host;
             }
-        ))
-        {
+            if (_options.Version != null)
+            {
+                cnfig.Version = _options.Version;
+            }
+            this.SetConfig(cnfig);
 
         }
 
