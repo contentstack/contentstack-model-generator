@@ -11,6 +11,7 @@ using contentstack.CMA;
 using contentstack.model.generator.Model;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace contentstack.model.generator
 {
@@ -43,7 +44,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.1")]
+        [VersionOption("0.1.3")]
         public bool Version { get; }
 
         private string _templateStart = @"using System;
@@ -117,14 +118,14 @@ using Newtonsoft.Json.Linq;";
             CreateHelperClass(Namespace, dir);
             foreach (var contentType in _contentTypes)
             {
-                CreateFile(FormatClassName(contentType.Title), Namespace, contentType, dir);
+                CreateFile(FormatClassName(contentType.Title), Namespace, contentType, dir, null, true);
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Files successfully created!");
             Console.ResetColor();
-            Console.WriteLine($"Opening {path}");
-            OpenFolderatPath(path);
+            Console.WriteLine($"Opening {dir.FullName}");
+            OpenFolderatPath(dir.FullName);
             return Program.OK;
         }
 
@@ -169,6 +170,8 @@ using Newtonsoft.Json.Linq;";
 
         private string GetDatatypeForContentType(Field field)
         {
+            Console.Write(field.ReferenceTo);
+            Console.Write(field.ReferenceTo.GetType());
             if (field.Fieldmetadata.RefMultipleContentType == false && !field.ReferenceTo.GetType().IsArray)
             {
                 string referenceTo = (string)(field.ReferenceTo);
@@ -176,6 +179,19 @@ using Newtonsoft.Json.Linq;";
                 if (contentType != null)
                 {
                     return FormatClassName(contentType.Title);
+                }
+            }
+            else if (field.ReferenceTo.GetType() == typeof(JArray))
+            {
+                JArray array = field.ReferenceTo as JArray;
+                if (array.Count == 1)
+                {
+                    string referenceTo = (string)(array.First);
+                    Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
+                    if (contentType != null)
+                    {
+                        return FormatClassName(contentType.Title);
+                    }
                 }
             }
             return "object";
@@ -258,7 +274,7 @@ using Newtonsoft.Json.Linq;";
             }
         }
 
-        private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo, string extendsClass = null)
+        private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo, string extendsClass = null, bool addConst = false)
         {
 
             Console.WriteLine($"Extracting Modular Blocks in {contentTypeName}.");
@@ -291,6 +307,12 @@ using Newtonsoft.Json.Linq;";
 
                     // Creating Class
                     AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
+
+                    if (addConst)
+                    {
+                        // Add Const
+                        sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
+                    }
 
                     //Adding Params to contentType
                     AddParams(contentTypeName, contentType.Schema, sb);
@@ -446,7 +468,7 @@ using Newtonsoft.Json.Linq;";
         private void AddClass(string contentTypeName, in StringBuilder sb)
         {
             //start class
-            sb.AppendLine($"    public class {contentTypeName}");
+            sb.AppendLine($"    public partial class {contentTypeName}");
             sb.AppendLine("    {");
         }
 
@@ -573,8 +595,7 @@ using Newtonsoft.Json.Linq;";
                 using (var sw = file.CreateText())
                 {
                     var sb = new StringBuilder();
-
-                    sb.AppendLine("using System;");
+                    sb.AppendLine(_templateStart);
                     sb.AppendLine("using System.ComponentModel;");
                     sb.AppendLine("using System.Reflection;");
 
@@ -621,8 +642,12 @@ using Newtonsoft.Json.Linq;";
                     var sb = new StringBuilder();
 
                     sb.AppendLine("using System;");
-                    sb.AppendLine("using System.ComponentModel;");
+                    sb.AppendLine("using Newtonsoft.Json;");
                     sb.AppendLine("using System.Reflection;");
+                    sb.AppendLine("using Newtonsoft.Json.Linq;");
+                    sb.AppendLine("using System.ComponentModel;");
+                    sb.AppendLine("using System.Text.Json.Serialization;");
+                    
                     // Creating namespace 
                     AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
                     // Creating Enum
