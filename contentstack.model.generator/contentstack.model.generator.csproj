@@ -12,9 +12,9 @@
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.1.2</PackageVersion>
+    <PackageVersion>0.1.3</PackageVersion>
     <Authors>Contentstack</Authors>
-    <ReleaseVersion>0.1.2</ReleaseVersion>
+    <ReleaseVersion>0.1.3</ReleaseVersion>
     <RootNamespace>Contentstack.Model.Generator</RootNamespace>
      <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>Contentstack model generator for .Net</PackageReleaseNotes>
