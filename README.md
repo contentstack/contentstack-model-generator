@@ -16,7 +16,7 @@ Once you install ```contentstack.model.generator```  run ```--help``` to view av
 | -- | -- | -- |
 | `-a` | `--api-key` | The Stack API key for the Content Delivery API |
 | `-d` | `--delivery-token` | The Delivery token for the Content Delivery API |
-| `-h` | `--host` | The Contentstack Host for the Content Delivery API |
+| `-e` | `--endpoint` | The Contentstack Host for the Content Delivery API |
 | `-n` | `--namespace` | The namespace the classes should be created in |
 | `-f` | `--force` | Automatically overwrite files that already exist |
 | `-m` | `--modular-block-prefix` | The Modular block Class Prefix. |
