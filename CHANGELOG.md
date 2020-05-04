@@ -1,3 +1,6 @@
+### Version: 0.3.0 
+#### Date: Feb-14-2020 
+- Host addition support added
 
 ### Version: 0.1.3 
 #### Date: Feb-14-2020 

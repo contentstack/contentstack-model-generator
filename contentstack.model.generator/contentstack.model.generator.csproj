@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <PackageId>contentstack.model.generator</PackageId>
-    <Copyright>Copyright © 2012-2019 Contentstack. All Rights Reserved</Copyright>
+    <Copyright>Copyright © 2012-2020 Contentstack. All Rights Reserved</Copyright>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageLicense>https://github.com/contentstack/contentstack-model-generator/blob/master/LICENSE</PackageLicense>
     <Owners>Contentstack</Owners>
@@ -12,9 +12,9 @@
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.1.3</PackageVersion>
+    <PackageVersion>0.2.0</PackageVersion>
     <Authors>Contentstack</Authors>
-    <ReleaseVersion>0.1.3</ReleaseVersion>
+    <ReleaseVersion>0.2.0</ReleaseVersion>
     <RootNamespace>Contentstack.Model.Generator</RootNamespace>
      <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>Contentstack model generator for .Net</PackageReleaseNotes>
@@ -34,8 +34,37 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="LICENSE.txt" />
+    <None Remove="nupkg\contentstack.model.generator.0.2.0.nupkg" />
   </ItemGroup>
    <ItemGroup>
         <None Include="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
     </ItemGroup>
+   <ItemGroup>
+     <Compile Remove="Models\AboutUS.cs" />
+     <Compile Remove="Models\ContentstackLink.cs" />
+     <Compile Remove="Models\ContentstackHelper.cs" />
+     <Compile Remove="Models\NewsItemBlocks\MBNewsItemHeading.cs" />
+     <Compile Remove="Models\NewsItemBlocks\MBNewsItemModularBlocksEnum.cs" />
+     <Compile Remove="Models\Testcontent.cs" />
+     <Compile Remove="Models\TitleImageAndDate.cs" />
+     <Compile Remove="Models\NewsItem.cs" />
+     <Compile Remove="Models\Sitefooter.cs" />
+     <Compile Remove="Models\Membership.cs" />
+     <Compile Remove="Models\HomePage.cs" />
+     <Compile Remove="Models\ContactUs.cs" />
+     <Compile Remove="Models\CertificationsLandingPage.cs" />
+     <Compile Remove="Models\Siteheader.cs" />
+     <Compile Remove="Models\NewsItemBlocks\MBNewsItemModularBlocks.cs" />
+     <Compile Remove="Models\NewsItemBlocks\MBNewsItemModularBlocksConverter.cs" />
+     <Compile Remove="Models\CMSHomePage.cs" />
+     <Compile Remove="Models\Books.cs" />
+     <Compile Remove="Models\BlogPostBlocks\MBBlogPostHeading.cs" />
+     <Compile Remove="Models\BlogPostBlocks\MBBlogPostModularBlocksEnum.cs" />
+     <Compile Remove="Models\BlogPostBlocks\MBBlogPostModularBlocksConverter.cs" />
+     <Compile Remove="Models\BlogPost.cs" />
+     <Compile Remove="Models\SEO.cs" />
+     <Compile Remove="Models\AXELOSLogo.cs" />
+     <Compile Remove="Models\Description.cs" />
+     <Compile Remove="Models\BlogPostBlocks\MBBlogPostModularBlocks.cs" />
+   </ItemGroup>
 </Project>
