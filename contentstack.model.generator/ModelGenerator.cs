@@ -26,7 +26,7 @@ namespace contentstack.model.generator
         [Required(ErrorMessage = "You must specify the Contentstack API key for the Content Delivery API")]
         public string DeliveryToken { get; set; }
 
-        [Option(CommandOptionType.SingleOrNoValue, Description = "The Contentstack Host for the Content Delivery API")]
+        [Option(CommandOptionType.SingleValue, ShortName = "e", LongName = "endpoint", Description = "The Contentstack Host for the Content Delivery API")]
         public string Host { get; set; } = "api.contentstack.io";
 
         [Option(CommandOptionType.SingleValue, Description = "The namespace the classes should be created in")]
@@ -44,7 +44,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.1.3")]
+        [VersionOption("0.2.0")]
         public bool Version { get; }
 
         private string _templateStart = @"using System;
