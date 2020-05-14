@@ -17,7 +17,7 @@
     <ReleaseVersion>0.2.1</ReleaseVersion>
     <RootNamespace>Contentstack.Model.Generator</RootNamespace>
      <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageReleaseNotes>Contentstack model generator for .Net</PackageReleaseNotes>
+    <PackageReleaseNotes>Contentstack Links URL </PackageReleaseNotes>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
