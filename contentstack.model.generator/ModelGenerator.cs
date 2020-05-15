@@ -618,7 +618,7 @@ using Newtonsoft.Json.Linq;";
                     sb.AppendLine("        }");
 
 
-                    sb.AppendLine("        private bool FieldExists(string fieldName, JObject jObject)");
+                    sb.AppendLine("        public static bool FieldExists(string fieldName, JObject jObject)");
                     sb.AppendLine("        {");
                     sb.AppendLine("            return jObject[fieldName] != null;");
                     sb.AppendLine("        }");
@@ -673,7 +673,7 @@ using Newtonsoft.Json.Linq;";
                     sb.AppendLine("        {");
                     sb.AppendLine("             JObject jObject = JObject.Load(reader);");
                     sb.AppendLine($"             {className} target = Create(objectType, jObject);");
-                    sb.AppendLine("             serializer.Populate(jObject.GetValue(target.GetModularBlockType()).CreateReader(), target);");
+                    sb.AppendLine("             serializer.Populate(jObject.GetValue(ContentstackHelper.GetDescription(target.BlockType)).CreateReader(), target);");
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
 
