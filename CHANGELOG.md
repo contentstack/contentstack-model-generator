@@ -1,5 +1,11 @@
-### Version: 0.3.0 
-#### Date: Feb-14-2020 
+### Version: 0.2.1
+#### Date: May-15-2020 
+- Entry Links URL Parsing
+- Modular block Enum Parsing
+
+
+### Version: 0.2.0 
+#### Date: May-4-2020 
 - Host addition support added
 
 ### Version: 0.1.3 
