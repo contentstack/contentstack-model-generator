@@ -13,5 +13,11 @@ namespace contentstack.model.generator.Model
 
         [JsonProperty(PropertyName = "ref_multiple_content_types")]
         public bool RefMultipleContentType;
+
+        [JsonProperty(PropertyName = "allow_rich_text")]
+        public bool isRichText;
+
+        [JsonProperty(PropertyName = "markdown")]
+        public bool isMarkdown;
     }
 }
