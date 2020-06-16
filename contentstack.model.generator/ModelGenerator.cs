@@ -116,6 +116,7 @@ using Newtonsoft.Json.Linq;";
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             CreateLinkClass(Namespace, dir);
             CreateHelperClass(Namespace, dir);
+            CreateStringHelperClass(Namespace, dir);
             foreach (var contentType in _contentTypes)
             {
                 CreateFile(FormatClassName(contentType.Title), Namespace, contentType, dir, null, true);
@@ -274,6 +275,64 @@ using Newtonsoft.Json.Linq;";
             }
         }
 
+        private void CreateGlobalFieldModular(string contentTypeName, string nameSpace, String ReferenceTo, DirectoryInfo directoryInfo, string extendsClass = null)
+        {
+            var globalField = _contentTypes.Find(contentType =>
+            {
+                return contentType.Uid == ReferenceTo;
+            });
+
+            var usingDirectiveList = new List<string>();
+            var fieldsBlock = globalField.Schema.FindAll(field =>
+            {
+                return field.DataType == "blocks";
+            });
+
+
+            if (fieldsBlock.Count > 0)
+            {
+                usingDirectiveList.Add($"using {Namespace}.Models.{FormatClassName(globalField.Title)}{FirstLetterToUpperCase("blocks")};");
+            }
+
+            var fieldsGroup = globalField.Schema.FindAll(field =>
+            {
+                return field.DataType == "group";
+            });
+
+
+            if (fieldsGroup.Count > 0)
+            {
+                usingDirectiveList.Add($"using {Namespace}.Models.{FormatClassName(globalField.Title)}{FirstLetterToUpperCase("group")};");
+            }
+
+            // Create File for ContentType
+            var file = shouldCreateFile(contentTypeName, directoryInfo);
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+                    // Adding using at start of file
+                    AddUsingDirectives(usingDirectiveList, sb);
+
+                    // Creating namespace 
+                    AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
+
+                    // Creating Class
+                    AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
+
+                    //Adding Params to contentType
+                    AddParams(globalField.Title, globalField.Schema, sb);
+
+                    // End of namespace and class
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+        }
+
         private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo, string extendsClass = null, bool addConst = false)
         {
 
@@ -312,6 +371,7 @@ using Newtonsoft.Json.Linq;";
                     {
                         // Add Const
                         sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
+                        sb.AppendLine($"        public string Uid {{ get; set; }}");
                     }
 
                     //Adding Params to contentType
@@ -373,9 +433,17 @@ using Newtonsoft.Json.Linq;";
 
                 foreach (var contentT in mb.Blocks)
                 {
+                    
                     string className = $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(contentT.Title)}";
                     blockTypes[contentT.Uid] = className;
-                    CreateFile(className, modularNameSpace, contentT, directory, modularBlockMainClass);
+                    if (contentT.ReferenceTo != null)
+                    {
+                        CreateGlobalFieldModular(className, modularNameSpace, contentT.ReferenceTo, directory, modularBlockMainClass);
+                    }
+                    else
+                    {
+                        CreateFile(className, modularNameSpace, contentT, directory, modularBlockMainClass);
+                    }
                 }
 
                 if (blockTypes.Count > 0)
@@ -434,7 +502,27 @@ using Newtonsoft.Json.Linq;";
                 {
                     sb.AppendLine($"        [JsonProperty(propertyName: \"{field.Uid}\")]");
                 }
-                sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}");
+                if (field.DataType == "text")
+                {
+                    if (field.Fieldmetadata.isMarkdown || field.Fieldmetadata.isRichText)
+                    {
+                        sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{");
+
+                        sb.AppendLine($"            set");
+                        sb.AppendLine($"            {{");
+                        sb.AppendLine($"                {FirstLetterToUpperCase(field.Uid)} = value;");
+                        sb.AppendLine($"            }}");
+
+                        sb.AppendLine($"            get");
+                        sb.AppendLine($"            {{");
+                        sb.AppendLine($"                return {FirstLetterToUpperCase(field.Uid)}.{(field.IsMultiple ? "ToListHtml()" : "ToHtml()" )};");
+                        sb.AppendLine($"            }}");
+
+                        sb.AppendLine($"        }}");
+                        continue;
+                    }
+                }
+                sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}"); 
             }
         }
 
@@ -471,7 +559,12 @@ using Newtonsoft.Json.Linq;";
             sb.AppendLine($"    public partial class {contentTypeName}");
             sb.AppendLine("    {");
         }
-
+        private void AddStaticClass(string contentTypeName, in StringBuilder sb)
+        {
+            //start class
+            sb.AppendLine($"    public static class {contentTypeName}");
+            sb.AppendLine("    {");
+        }
         private void AddEnum(string enumName, in StringBuilder sb)
         {
             //start class
@@ -622,6 +715,56 @@ using Newtonsoft.Json.Linq;";
                     sb.AppendLine("        {");
                     sb.AppendLine("            return jObject[fieldName] != null;");
                     sb.AppendLine("        }");
+                    // End of namespace and Enum
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+        }
+
+        private void CreateStringHelperClass(string nameSpace, DirectoryInfo directoryInfo)
+        {
+            string className = "ContentstackStringExtension";
+            FileInfo file = shouldCreateFile(className, directoryInfo);
+
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("using Markdig;");
+                    sb.AppendLine(_templateStart);
+                    sb.AppendLine("using System.ComponentModel;");
+                    sb.AppendLine("using System.Reflection;");
+
+                    // Creating namespace 
+                    AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
+                    // Creating Enum
+                    AddStaticClass(className, sb);
+
+                    sb.AppendLine();
+                    sb.AppendLine(@"       public static string ToHtml(this String str)");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            if (str != null)");
+                    sb.AppendLine("            {");
+                    sb.AppendLine("                 var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();");
+                    sb.AppendLine("                 return Markdown.ToHtml(str, pipeline);");
+                    sb.AppendLine("            }");
+                    sb.AppendLine("            return string.Empty;");
+                    sb.AppendLine("        }");
+
+                    sb.AppendLine("        public static List<string> ToListHtml(this List<string> str)");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            List<string> result = new List<string>();");
+                    sb.AppendLine("            foreach (var value in str)");
+                    sb.AppendLine("            {");
+                    sb.AppendLine("                 result.Add(value.ToHtml());");
+                    sb.AppendLine("            }");
+                    sb.AppendLine("            return result;");
+                    sb.AppendLine("        }");
+
                     // End of namespace and Enum
                     AddEnd(sb);
 
