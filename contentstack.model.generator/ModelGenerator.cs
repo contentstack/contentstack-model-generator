@@ -504,21 +504,22 @@ using Newtonsoft.Json.Linq;";
                 }
                 if (field.DataType == "text")
                 {
-                    if (field.Fieldmetadata.isMarkdown || field.Fieldmetadata.isRichText)
+                    if (field.Fieldmetadata.isMarkdown)
                     {
                         sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{");
 
                         sb.AppendLine($"            set");
                         sb.AppendLine($"            {{");
-                        sb.AppendLine($"                {FirstLetterToUpperCase(field.Uid)} = value;");
+                        sb.AppendLine($"                this.{FirstLetterToUpperCase(field.Uid)}Store = value;");
                         sb.AppendLine($"            }}");
 
                         sb.AppendLine($"            get");
                         sb.AppendLine($"            {{");
-                        sb.AppendLine($"                return {FirstLetterToUpperCase(field.Uid)}.{(field.IsMultiple ? "ToListHtml()" : "ToHtml()" )};");
+                        sb.AppendLine($"                return this.{FirstLetterToUpperCase(field.Uid)}Store.{(field.IsMultiple ? "ToListHtml()" : "ToHtml()" )};");
                         sb.AppendLine($"            }}");
 
                         sb.AppendLine($"        }}");
+                        sb.AppendLine($"        private {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)}Store;");
                         continue;
                     }
                 }
@@ -789,7 +790,6 @@ using Newtonsoft.Json.Linq;";
                     sb.AppendLine("using System.Reflection;");
                     sb.AppendLine("using Newtonsoft.Json.Linq;");
                     sb.AppendLine("using System.ComponentModel;");
-                    sb.AppendLine("using System.Text.Json.Serialization;");
                     
                     // Creating namespace 
                     AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
