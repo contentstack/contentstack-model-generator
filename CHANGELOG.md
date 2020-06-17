@@ -1,3 +1,8 @@
+
+### Version: 0.2.2
+#### Date: June-17-2020 
+- Modular block with Global field
+
 ### Version: 0.2.1
 #### Date: May-15-2020 
 - Entry Links URL Parsing
