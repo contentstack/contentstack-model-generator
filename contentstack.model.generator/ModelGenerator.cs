@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using contentstack.CMA;
 using contentstack.model.generator.Model;
+using Contentstack.Model.Generator.Model;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -38,13 +39,13 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "The Modular block Class Prefix.")]
         public string ModularBlockPrefix { get; } = "MB";
 
-        [Option(CommandOptionType.SingleValue, Description = "The Modular block Class Prefix.")]
+        [Option(CommandOptionType.SingleValue, Description = "The Group Class Prefix.")]
         public string GroupPrefix { get; } = "Group";
 
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.2.1")]
+        [VersionOption("0.2.3")]
         public bool Version { get; }
 
         private string _templateStart = @"using System;
@@ -57,7 +58,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;";
 
-        private List<Contenttype> _contentTypes;
+        private List<Contenttype> _contentTypes = new List<Contenttype>();
         private Dictionary<string, List<Contenttype>> _modularBlocks = new Dictionary<string, List<Contenttype>>();
 
         public async Task<int> OnExecute(CommandLineApplication app, IConsole console)
@@ -73,18 +74,32 @@ using Newtonsoft.Json.Linq;";
 
             try
             {
+                
                 Console.WriteLine($"Fetching Content Types from {ApiKey}");
-                var contentType = await client.GetContentTypes();
-                var ContentTypeJson = JsonConvert.SerializeObject(contentType);
-                _contentTypes = JsonConvert.DeserializeObject<List<Contenttype>>(ContentTypeJson);
-                Console.WriteLine($"Found {_contentTypes.Count} content types.");
+                var totalCount = await getContentTypes(client, 0);
+                var skip = 100;
+                Console.WriteLine($"Found {totalCount} Content Types .");
+
+                while (totalCount > skip)
+                {
+                   Console.WriteLine($"{skip} Content Types Fetched.");
+                   totalCount = await getContentTypes(client, skip);
+                   skip += 100;
+                }
+                Console.WriteLine($"Total {totalCount} Content Types fetched.");
 
                 Console.WriteLine($"Fetching Global Fields from {ApiKey}");
-                var globalField = await client.GetGlobalFields();
-                var globalFieldsJson = JsonConvert.SerializeObject(globalField);
-                var globalFields = JsonConvert.DeserializeObject<List<Contenttype>>(globalFieldsJson);
-                _contentTypes.AddRange(globalFields);
-                Console.WriteLine($"Found {globalFields.Count} Global Fields.");
+                totalCount = await getGlobalFields(client, 0);
+                skip = 100;
+                Console.WriteLine($"Found {totalCount} Global Fields.");
+
+                while (totalCount > skip)
+                {
+                    Console.WriteLine($"{skip} Global Fields Fetched.");
+                    totalCount = await getGlobalFields(client, skip);
+                    skip += 100;
+                }
+                Console.WriteLine($"Total {totalCount} Global Fields fetched.");
             }
             catch (Exception e)
             {
@@ -117,6 +132,7 @@ using Newtonsoft.Json.Linq;";
             CreateLinkClass(Namespace, dir);
             CreateHelperClass(Namespace, dir);
             CreateStringHelperClass(Namespace, dir);
+            CreateDisplayAttributeClass(Namespace, dir);
             foreach (var contentType in _contentTypes)
             {
                 CreateFile(FormatClassName(contentType.Title), Namespace, contentType, dir, null, true);
@@ -130,6 +146,19 @@ using Newtonsoft.Json.Linq;";
             return Program.OK;
         }
 
+        private async Task<int> getContentTypes(ContentstackClient client, int skip)
+        {
+            ContentstackResponse contentstackResponse = await client.GetContentTypes(skip: skip);
+            _contentTypes.AddRange(contentstackResponse.listContentTypes);
+            return contentstackResponse.Count;
+        }
+
+        private async Task<int> getGlobalFields(ContentstackClient client, int skip)
+        {
+            ContentstackResponse contentstackResponse = await client.GetGlobalFields(skip: skip);
+            _contentTypes.AddRange(contentstackResponse.listContentTypes);
+            return contentstackResponse.Count;
+        }
         private string GetDatatype(Field field, string contentTypeName)
         {
             switch (field.DataType)
@@ -244,6 +273,48 @@ using Newtonsoft.Json.Linq;";
             return $"{GroupPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ", "");
         }
 
+        private void CreateDisplayAttributeClass(string NameSpace, DirectoryInfo directoryInfo)
+        {
+            // Create File for DisplayAttribute
+            string contentstackLinkClass = "DisplayNameAttribute";
+            var file = shouldCreateFile(contentstackLinkClass, directoryInfo);
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+                    // Adding using at start of file
+                    AddUsingDirectives(null, sb);
+
+                    // Creating namespace 
+                    AddNameSpace($"{NameSpace}.{directoryInfo.Name}", sb);
+
+                    sb.AppendLine("    [AttributeUsage(AttributeTargets.Field)]");
+                    // Creating Class
+                    sb.AppendLine($"    public partial class {contentstackLinkClass}: Attribute");
+                    sb.AppendLine("    {");
+                    sb.AppendLine("         private string displayName;");
+                    sb.AppendLine("        public string DisplayName");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            get");
+                    sb.AppendLine("            {");
+                    sb.AppendLine("                return displayName;");
+                    sb.AppendLine("            }");
+                    sb.AppendLine("        }");
+
+                    sb.AppendLine($"        public {contentstackLinkClass}(string displayName)");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            this.displayName = displayName;");
+                    sb.AppendLine("        }");
+
+                    // End of namespace and class
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+        }
         private void CreateLinkClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             // Create File for LinkClass
@@ -790,11 +861,13 @@ using Newtonsoft.Json.Linq;";
                     sb.AppendLine("using System.Reflection;");
                     sb.AppendLine("using Newtonsoft.Json.Linq;");
                     sb.AppendLine("using System.ComponentModel;");
-                    
+                    sb.AppendLine("using Contentstack.Core;");
                     // Creating namespace 
                     AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
                     // Creating Enum
-                    AddClass($"{className}Converter : JsonConverter<{className}>", sb);
+                    var ConverterName = $"{className}Converter";
+                    sb.AppendLine($"    [CSJsonConverter(\"{ConverterName}\")]");
+                    AddClass($"{ConverterName} : JsonConverter<{className}>", sb);
 
                     sb.AppendLine($"        protected {className} Create(Type objectType, JObject jObject)");
                     sb.AppendLine("        {");

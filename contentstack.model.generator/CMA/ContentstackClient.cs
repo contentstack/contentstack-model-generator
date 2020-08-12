@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Net;
 using System.IO;
 using System.Collections;
+using Contentstack.Model.Generator.Model;
+using contentstack.model.generator.Model;
 
 namespace contentstack.CMA
 {
@@ -69,7 +71,7 @@ namespace contentstack.CMA
             this._LocalHeaders = new Dictionary<string, object>();
             this.SetHeader("api_key", _options.ApiKey);
             this.SetHeader("access_token", _options.AccessToken);
-        Config cnfig = new Config();
+            Config cnfig = new Config();
             if (_options.Host != null)
             {
                 cnfig.Host = _options.Host;
@@ -177,13 +179,11 @@ namespace contentstack.CMA
         /// </code>
         /// </example>
         /// <returns>The List of content types schema.</returns>
-        public async Task<IList> GetContentTypes()
+        public async Task<ContentstackResponse> GetContentTypes(int skip = 0)
         {
             Dictionary<String, Object> headers = GetHeader(_LocalHeaders);
             Dictionary<String, object> headerAll = new Dictionary<string, object>();
             Dictionary<string, object> mainJson = new Dictionary<string, object>();
-
-            //Dictionary<string, object> urlQueries = new Dictionary<string, object>();
 
             if (headers != null && headers.Count() > 0)
             {
@@ -197,14 +197,21 @@ namespace contentstack.CMA
             {
                 mainJson.Add(kvp.Key, kvp.Value);
             }
-            
+            mainJson.Add("include_count", "true");
+            mainJson.Add("skip", $"{skip}");
             try
             {
                 HTTPRequestHandler RequestHandler = new HTTPRequestHandler();
                 var outputResult = await RequestHandler.ProcessRequest(_Url, headers, mainJson);
                 JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
                 IList contentTypes = (IList)data["content_types"];
-                return contentTypes;
+                ContentstackResponse contentstackResponse = new ContentstackResponse();
+                var ContentTypeJson = JsonConvert.SerializeObject(contentTypes);
+                contentstackResponse.listContentTypes = JsonConvert.DeserializeObject<List<Contenttype>>(ContentTypeJson);
+                if (data["count"] != null) {
+                    contentstackResponse.Count = (int)data["count"];
+                }
+                return contentstackResponse;
             }
             catch (Exception ex)
             {
@@ -222,14 +229,12 @@ namespace contentstack.CMA
         /// </code>
         /// </example>
         /// <returns>The List of Global Fields schema.</returns>
-        public async Task<IList> GetGlobalFields()
+        public async Task<ContentstackResponse> GetGlobalFields(int skip = 0)
         {
             Dictionary<String, Object> headers = GetHeader(_LocalHeaders);
             Dictionary<String, object> headerAll = new Dictionary<string, object>();
             Dictionary<string, object> mainJson = new Dictionary<string, object>();
-
-            //Dictionary<string, object> urlQueries = new Dictionary<string, object>();
-
+            
             if (headers != null && headers.Count() > 0)
             {
                 foreach (var header in headers)
@@ -242,16 +247,25 @@ namespace contentstack.CMA
             {
                 mainJson.Add(kvp.Key, kvp.Value);
             }
+            mainJson.Add("include_count", "true");
+            mainJson.Add("skip", $"{skip}");
             try
             {
                 HTTPRequestHandler RequestHandler = new HTTPRequestHandler();
                 var outputResult = await RequestHandler.ProcessRequest(_GlobalFieldsUrl, headers, mainJson);
                 JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
                 IList globalFields = (IList)data["global_fields"];
-                return globalFields;
+                ContentstackResponse contentstackResponse = new ContentstackResponse();
+                var ContentTypeJson = JsonConvert.SerializeObject(globalFields);
+                contentstackResponse.listContentTypes = JsonConvert.DeserializeObject<List<Contenttype>>(ContentTypeJson);
+                if (data["count"] != null) {
+                    contentstackResponse.Count = (int)data["count"];
+                }
+                return contentstackResponse;
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 throw GetContentstackError(ex);
             }
         }
