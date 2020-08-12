@@ -29,6 +29,6 @@ Global
 		$4.scope = text/plain
 		$0.StandardHeader = $5
 		$0.VersionControlPolicy = $6
-		version = 0.2.2
+		version = 0.2.3
 	EndGlobalSection
 EndGlobal
