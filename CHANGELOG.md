@@ -1,6 +1,6 @@
 
 ### Version: 0.2.3
-#### Date: June-17-2020 
+#### Date: Aug-12-2020 
 - DisplayNameAttribute added for Modular block Enum
 - Skip limit functionality added to support Stack with more than 100 Content Type and Global Field
 - Contentstack Response Class added
