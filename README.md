@@ -43,7 +43,7 @@ contentstack.model.generator -a <stack_api_key> -d <delivery_token> -n YourProje
 
 ### MIT License
 
-Copyright (c) 2020 Contentstack
+Copyright (c) 2012-2020 Contentstack
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
