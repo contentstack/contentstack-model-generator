@@ -38,6 +38,12 @@
   </ItemGroup>
    <ItemGroup>
         <None Include="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+        <None Include="..\CHANGELOG.md">
+          <Link>CHANGELOG.md</Link>
+        </None>
+        <None Include="..\README.md">
+          <Link>README.md</Link>
+        </None>
     </ItemGroup>
    <ItemGroup>
      <Compile Remove="Models\AboutUS.cs" />

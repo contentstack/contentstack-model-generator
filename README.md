@@ -14,9 +14,9 @@ Once you install ```contentstack.model.generator```  run ```--help``` to view av
 
 | Short key | Long Key | Description |
 | -- | -- | -- |
-| `-a` | `--api-key` | The Stack API key for the Content Delivery API |
-| `-d` | `--delivery-token` | The Delivery token for the Content Delivery API |
-| `-e` | `--endpoint` | The Contentstack Host for the Content Delivery API |
+| `-a` | `--api-key` | The Stack API key for the Content Management API |
+| `-A` | `--authtoken` | The Authtoken for the Content Management API |
+| `-e` | `--endpoint` | The Contentstack Host for the Content Management API |
 | `-n` | `--namespace` | The namespace the classes should be created in |
 | `-f` | `--force` | Automatically overwrite files that already exist |
 | `-m` | `--modular-block-prefix` | The Modular block Class Prefix. |
@@ -26,24 +26,24 @@ Once you install ```contentstack.model.generator```  run ```--help``` to view av
 ### Example 1
 To create classes in current directory run following command:
 ```
-contentstack.model.generator -a <stack_api_key> -d <delivery_token>
+contentstack.model.generator -a <stack_api_key> -A <authtoken>
 ```
 
 ### Example 2
 To create classes in specific path run following command:
 ```
-contentstack.model.generator -a <stack_api_key> -d <delivery_token> -p /User/xxx/Desktop
+contentstack.model.generator -a <stack_api_key> -A <authtoken> -p /User/xxx/Desktop
 ```
 
 ### Example 3
 To create classes with namespace run following command:
 ```
-contentstack.model.generator -a <stack_api_key> -d <delivery_token> -n YourProject.Models
+contentstack.model.generator -a <stack_api_key> -A <authtoken> -n YourProject.Models
 ```
 
 ### MIT License
 
-Copyright (c) 2012-2020 Contentstack
+Copyright (c) 2012-2021 Contentstack
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
