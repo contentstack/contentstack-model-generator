@@ -12,12 +12,12 @@
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.2.3</PackageVersion>
+    <PackageVersion>0.3.0</PackageVersion>
     <Authors>Contentstack</Authors>
-    <ReleaseVersion>0.2.3</ReleaseVersion>
+    <ReleaseVersion>0.3.0</ReleaseVersion>
     <RootNamespace>Contentstack.Model.Generator</RootNamespace>
      <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageReleaseNotes>Global field support in modular block</PackageReleaseNotes>
+    <PackageReleaseNotes>Reference issue in new stack resolved</PackageReleaseNotes>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
