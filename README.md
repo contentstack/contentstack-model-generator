@@ -20,7 +20,7 @@ Once you install ```contentstack.model.generator```  run ```--help``` to view av
 | `-n` | `--namespace` | The namespace the classes should be created in |
 | `-f` | `--force` | Automatically overwrite files that already exist |
 | `-m` | `--modular-block-prefix` | The Modular block Class Prefix. |
-| `-g` | `--group-prefix` | The Modular block Class Prefix. |
+| `-g` | `--group-prefix` | The Group Class Prefix. |
 | `-p` | `--path` | Path to the file or directory to create files in. |
 
 ### Example 1
