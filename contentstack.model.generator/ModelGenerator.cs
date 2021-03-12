@@ -19,15 +19,15 @@ namespace contentstack.model.generator
     [Command(Name = "contentstack.model.generator", FullName = "Contentstack Model Generator", Description = "Creates c# classes from a Contentstack content types.")]
     public class ModelGenerator
     {
-        [Option(CommandOptionType.SingleValue, Description = "The Contentstack API key for the Content Delivery API")]
-        [Required(ErrorMessage = "You must specify the Contentstack API key for the Content Delivery API")]
+        [Option(CommandOptionType.SingleValue, Description = "The Contentstack API key for the Content Management API")]
+        [Required(ErrorMessage = "You must specify the Contentstack API key for the Content Management API")]
         public string ApiKey { get; set; }
 
-        [Option(CommandOptionType.SingleValue, ShortName = "d", LongName = "delivery-token", Description = "The Delivery token for the Content Delivery API")]
-        [Required(ErrorMessage = "You must specify the Contentstack API key for the Content Delivery API")]
-        public string DeliveryToken { get; set; }
+        [Option(CommandOptionType.SingleValue, ShortName = "A", LongName = "authtoken", Description = "The Authtoken for the Content Management API")]
+        [Required(ErrorMessage = "You must specify the Contentstack authtoken for the Content Management API")]
+        public string Authtoken { get; set; }
 
-        [Option(CommandOptionType.SingleValue, ShortName = "e", LongName = "endpointlon", Description = "The Contentstack Host for the Content Delivery API")]
+        [Option(CommandOptionType.SingleValue, ShortName = "e", LongName = "endpoint", Description = "The Contentstack Host for the Content Management API")]
         public string Host { get; set; } = "api.contentstack.io";
 
         [Option(CommandOptionType.SingleValue, Description = "The namespace the classes should be created in")]
@@ -45,7 +45,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.2.3")]
+        [VersionOption("0.3.0")]
         public bool Version { get; }
 
         private string _templateStart = @"using System;
@@ -60,6 +60,7 @@ using Newtonsoft.Json.Linq;";
 
         private List<Contenttype> _contentTypes = new List<Contenttype>();
         private Dictionary<string, List<Contenttype>> _modularBlocks = new Dictionary<string, List<Contenttype>>();
+        StackResponse stack;
 
         public async Task<int> OnExecute(CommandLineApplication app, IConsole console)
         {
@@ -67,15 +68,27 @@ using Newtonsoft.Json.Linq;";
             var options = new ContentstackOptions
             {
                 ApiKey = ApiKey,
-                AccessToken = DeliveryToken,
+                Authtoken = Authtoken,
                 Host = Host
             };
             var client = new ContentstackClient(options);
 
             try
             {
-                
-                Console.WriteLine($"Fetching Content Types from {ApiKey}");
+                Console.WriteLine($"Fetching Stack details for API Key {ApiKey}");
+                stack = await client.GetStack();                
+            } catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("There was an error communicating with the Contentstack API: " + e.Message);
+                Console.Error.WriteLine("Please verify that your api key and authtoken are correct");
+                return Program.ERROR;
+            }
+
+            try
+            {
+                Console.WriteLine($"Fetching Content Types from {stack.Name}");
                 var totalCount = await getContentTypes(client, 0);
                 var skip = 100;
                 Console.WriteLine($"Found {totalCount} Content Types .");
@@ -88,7 +101,7 @@ using Newtonsoft.Json.Linq;";
                 }
                 Console.WriteLine($"Total {totalCount} Content Types fetched.");
 
-                Console.WriteLine($"Fetching Global Fields from {ApiKey}");
+                Console.WriteLine($"Fetching Global Fields from {stack.Name}");
                 totalCount = await getGlobalFields(client, 0);
                 skip = 100;
                 Console.WriteLine($"Found {totalCount} Global Fields.");
@@ -105,7 +118,7 @@ using Newtonsoft.Json.Linq;";
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine("There was an error communicating with the Contentstack API: " + e.Message);
-                Console.Error.WriteLine("Please verify that your api key, delivery token and environment are correct");
+                Console.Error.WriteLine("Please verify that your api key and authtoken are correct");
                 return Program.ERROR;
             }
             Console.ResetColor();
@@ -193,6 +206,10 @@ using Newtonsoft.Json.Linq;";
         private string GetDatatypeForField(Field field, string contentTypeName)
         {
             string dataType = GetDatatype(field, contentTypeName);
+            if (field.DataType == "reference" && DateTime.Compare(stack.Settings.version, DateTime.Parse("Apr, 04 2019")) >= 0)
+            {
+                return $"List<{ dataType }>";
+            }
             return field.Fieldmetadata != null && field.Fieldmetadata.RefMultiple
                 ? $"List<{ dataType }>"
                 : (field.IsMultiple ? $"List<{ dataType }>" : dataType);
@@ -200,8 +217,6 @@ using Newtonsoft.Json.Linq;";
 
         private string GetDatatypeForContentType(Field field)
         {
-            Console.Write(field.ReferenceTo);
-            Console.Write(field.ReferenceTo.GetType());
             if (field.Fieldmetadata.RefMultipleContentType == false && !field.ReferenceTo.GetType().IsArray)
             {
                 string referenceTo = (string)(field.ReferenceTo);

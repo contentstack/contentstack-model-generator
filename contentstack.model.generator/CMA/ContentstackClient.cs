@@ -39,6 +39,14 @@ namespace contentstack.CMA
         }
         private Dictionary<string, object> UrlQueries = new Dictionary<string, object>();
         private Dictionary<string, object> _Headers = new Dictionary<string, object>();
+
+        private string _StackUrl
+        {
+            get
+            {
+                return String.Format("{0}/stacks/", config.BaseUrl);
+            }
+        }
         private string _Url
         {
          get { 
@@ -70,7 +78,7 @@ namespace contentstack.CMA
             this.StackApiKey = _options.ApiKey;
             this._LocalHeaders = new Dictionary<string, object>();
             this.SetHeader("api_key", _options.ApiKey);
-            this.SetHeader("access_token", _options.AccessToken);
+            this.SetHeader("authtoken", _options.Authtoken);
             Config cnfig = new Config();
             if (_options.Host != null)
             {
@@ -167,6 +175,41 @@ namespace contentstack.CMA
 
 
         #endregion
+
+        public async Task<StackResponse> GetStack()
+        {
+            Dictionary<String, Object> headers = GetHeader(_LocalHeaders);
+            Dictionary<String, object> headerAll = new Dictionary<string, object>();
+            Dictionary<string, object> mainJson = new Dictionary<string, object>();
+
+            if (headers != null && headers.Count() > 0)
+            {
+                foreach (var header in headers)
+                {
+                    headerAll.Add(header.Key, (String)header.Value);
+                }
+            }
+
+            foreach (var kvp in UrlQueries)
+            {
+                mainJson.Add(kvp.Key, kvp.Value);
+            }
+           
+            try
+            {
+                HTTPRequestHandler RequestHandler = new HTTPRequestHandler();
+                var outputResult = await RequestHandler.ProcessRequest(_StackUrl, headers, mainJson);
+                JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
+                SerializerSettings.DateFormatString = "yyyy-MM-dd";
+                var stack = data["stack"];
+                var stackJson = JsonConvert.SerializeObject(stack);
+                return JsonConvert.DeserializeObject<StackResponse>(stackJson, this.SerializerSettings);
+            }
+            catch (Exception ex)
+            {
+                throw GetContentstackError(ex);
+            }
+        }
 
         #region Public Functions
         /// <summary>

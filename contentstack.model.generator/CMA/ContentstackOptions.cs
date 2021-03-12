@@ -16,9 +16,9 @@ namespace contentstack.CMA
         public string ApiKey { get; set; }
 
         /// <summary>
-        /// The access token used when communicating with the ContentStack API.
+        /// The authtoken used when communicating with the ContentStack API.
         /// </summary>
-        public string AccessToken { get; set; }
+        public string Authtoken { get; set; }
 
         /// <summary>
         /// The Host used to set host url for the ContentStack API.
