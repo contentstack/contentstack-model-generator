@@ -1,3 +1,11 @@
+### Version: 0.3.0
+#### Date: Mar-12-2021
+
+##### Update API:
+- Removed Delivery Token support from plugin use Authtoken instead.
+
+##### Bug fix:
+- Reference field List/Object issue for new Stack resolved.
 
 ### Version: 0.2.3
 #### Date: Aug-12-2020 
