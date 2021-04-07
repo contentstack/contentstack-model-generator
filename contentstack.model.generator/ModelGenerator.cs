@@ -45,7 +45,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.3.0")]
+        [VersionOption("0.4.0")]
         public bool Version { get; }
 
         private string _templateStart = @"using System;
@@ -305,6 +305,7 @@ using Newtonsoft.Json.Linq;";
 using Newtonsoft.Json;
 using Contentstack.Core;
 using Newtonsoft.Json.Linq;
+using Contentstack.Core.Models;
 using System.Collections.Generic;
 using Contentstack.Utils.Interfaces;
 ";
@@ -339,7 +340,13 @@ using Contentstack.Utils.Interfaces;
                         sb.AppendLine("                 }");
                         includeElse = true;
                     }
-                    
+                    // Embedded Asset Object
+                    sb.AppendLine($"                 {(includeElse == true ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
+                    sb.AppendLine("                 {");
+                    sb.AppendLine($"                    Asset asset = obj.ToObject<Asset>();");
+                    sb.AppendLine($"                    target.Add(asset);");
+                    sb.AppendLine("                 }");
+
                     sb.AppendLine("             }");
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
@@ -620,7 +627,7 @@ using Contentstack.Utils.Interfaces;
 
                     if (fields == true)
                     {
-                        sb.AppendLine($"       [JsonProperty(propertyName: \"_embedded_items\")]");
+                        sb.AppendLine($"        [JsonProperty(propertyName: \"_embedded_items\")]");
                         sb.AppendLine("        public Dictionary<string, List<IEmbeddedObject>> embeddedItems { get; set; }");
                     }
 

@@ -12,9 +12,9 @@
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.3.0</PackageVersion>
+    <PackageVersion>0.4.0</PackageVersion>
     <Authors>Contentstack</Authors>
-    <ReleaseVersion>0.3.0</ReleaseVersion>
+    <ReleaseVersion>0.4.0</ReleaseVersion>
     <RootNamespace>Contentstack.Model.Generator</RootNamespace>
      <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>Reference issue in new stack resolved</PackageReleaseNotes>
