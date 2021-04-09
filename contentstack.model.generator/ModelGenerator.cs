@@ -45,7 +45,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.3.0")]
+        [VersionOption("0.4.0")]
         public bool Version { get; }
 
         private string _templateStart = @"using System;
@@ -86,6 +86,20 @@ using Newtonsoft.Json.Linq;";
                 return Program.ERROR;
             }
 
+            var path = "";
+            if (string.IsNullOrEmpty(Path))
+            {
+                path = Directory.GetCurrentDirectory();
+                Console.WriteLine($"No path specified, creating files in current working directory {path}");
+            }
+            else
+            {
+                Console.WriteLine($"Path specified. Files will be created at {Path}");
+                path = Path;
+            }
+            path = $"{path}/Models";
+            DirectoryInfo dir = CreateDirectory(path);
+
             try
             {
                 Console.WriteLine($"Fetching Content Types from {stack.Name}");
@@ -100,6 +114,8 @@ using Newtonsoft.Json.Linq;";
                    skip += 100;
                 }
                 Console.WriteLine($"Total {totalCount} Content Types fetched.");
+
+                CreateEmbeddedObjectClass(Namespace, dir);
 
                 Console.WriteLine($"Fetching Global Fields from {stack.Name}");
                 totalCount = await getGlobalFields(client, 0);
@@ -123,20 +139,6 @@ using Newtonsoft.Json.Linq;";
             }
             Console.ResetColor();
 
-            var path = "";
-            if (string.IsNullOrEmpty(Path))
-            {
-                path = Directory.GetCurrentDirectory();
-                Console.WriteLine($"No path specified, creating files in current working directory {path}");
-            }
-            else
-            {
-                Console.WriteLine($"Path specified. Files will be created at {Path}");
-                path = Path;
-            }
-            path = $"{path}/Models";
-            DirectoryInfo dir = CreateDirectory(path);
-
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"Generating files from content type");
             Console.ResetColor();
@@ -146,9 +148,10 @@ using Newtonsoft.Json.Linq;";
             CreateHelperClass(Namespace, dir);
             CreateStringHelperClass(Namespace, dir);
             CreateDisplayAttributeClass(Namespace, dir);
+
             foreach (var contentType in _contentTypes)
             {
-                CreateFile(FormatClassName(contentType.Title), Namespace, contentType, dir, null, true);
+                CreateFile(FormatClassName(contentType.Title), Namespace, contentType, dir);
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
@@ -288,6 +291,80 @@ using Newtonsoft.Json.Linq;";
             return $"{GroupPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ", "");
         }
 
+        private void CreateEmbeddedObjectClass(string NameSpace, DirectoryInfo directoryInfo) 
+        {
+            string ConverterName = "IEmbeddedObjectConverter";
+            var file = shouldCreateFile(ConverterName, directoryInfo);
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+                    // Adding using at start of file
+                    var usingDirectives = @"using System;
+using Newtonsoft.Json;
+using Contentstack.Core;
+using Newtonsoft.Json.Linq;
+using Contentstack.Core.Models;
+using System.Collections.Generic;
+using Contentstack.Utils.Interfaces;
+";
+                    sb.AppendLine(usingDirectives);
+
+                    // Creating namespace 
+                    var className = "List<IEmbeddedObject>";
+                    AddNameSpace($"{NameSpace}.{directoryInfo.Name}", sb);
+                    // Creating Enum
+                    sb.AppendLine($"    [CSJsonConverter(\"{ConverterName}\")]");
+                    AddClass($"{ConverterName} : JsonConverter<{className}>", sb);
+
+                    sb.AppendLine($"         protected {className} Create(Type objectType, JArray jArray)");
+                    sb.AppendLine("         {");
+                    sb.AppendLine($"            return new List<IEmbeddedObject>();");
+                    sb.AppendLine("         }");
+
+                    sb.AppendLine($"         public override {className} ReadJson(JsonReader reader, Type objectType, {className} existingValue, bool hasExistingValue, JsonSerializer serializer)");
+                    sb.AppendLine("         {");
+                    sb.AppendLine("             JArray jArray = JArray.Load(reader);");
+                    sb.AppendLine($"             {className} target = Create(objectType, jArray);");
+                    sb.AppendLine("             foreach (JObject obj in jArray)");
+                    sb.AppendLine("             {");
+
+                    var includeElse = false;
+                    foreach (var contentType in _contentTypes)
+                    {
+                        sb.AppendLine($"                 {(includeElse == true ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"{contentType.Uid}\")");
+                        sb.AppendLine("                 {");
+                        sb.AppendLine($"                    {FormatClassName(contentType.Title)} {FirstLetterToUpperCase(contentType.Uid)} = obj.ToObject<{FormatClassName(contentType.Title)}>();");
+                        sb.AppendLine($"                    target.Add({FirstLetterToUpperCase(contentType.Uid)});");
+                        sb.AppendLine("                 }");
+                        includeElse = true;
+                    }
+                    // Embedded Asset Object
+                    sb.AppendLine($"                 {(includeElse == true ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
+                    sb.AppendLine("                 {");
+                    sb.AppendLine($"                    Asset asset = obj.ToObject<Asset>();");
+                    sb.AppendLine($"                    target.Add(asset);");
+                    sb.AppendLine("                 }");
+
+                    sb.AppendLine("             }");
+                    sb.AppendLine("             return target;");
+                    sb.AppendLine("         }");
+
+                    sb.AppendLine($"         public override void WriteJson(JsonWriter writer, {className} value, JsonSerializer serializer)");
+                    sb.AppendLine("         {");
+                    sb.AppendLine("         }");
+
+                    // End of namespace and Enum
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+
+            }
+        }
+
         private void CreateDisplayAttributeClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             // Create File for DisplayAttribute
@@ -419,7 +496,7 @@ using Newtonsoft.Json.Linq;";
             }
         }
 
-        private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo, string extendsClass = null, bool addConst = false)
+        private void CreateModularFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo, string extendsClass = null)
         {
 
             Console.WriteLine($"Extracting Modular Blocks in {contentTypeName}.");
@@ -434,8 +511,8 @@ using Newtonsoft.Json.Linq;";
 
             Console.WriteLine($"Extracting Groups in {contentTypeName}.");
 
-            string grpupUsingDirective = CreateGroup(nameSpace, contentTypeName, contentType.Schema, directoryInfo);
-            usingDirectiveList.Add(grpupUsingDirective);
+            string groupUsingDirective = CreateGroup(nameSpace, contentTypeName, contentType.Schema, directoryInfo);
+            usingDirectiveList.Add(groupUsingDirective);
 
             // Create File for ContentType
             var file = shouldCreateFile(contentTypeName, directoryInfo);
@@ -453,15 +530,106 @@ using Newtonsoft.Json.Linq;";
                     // Creating Class
                     AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
 
-                    if (addConst)
+                    //Adding Params to contentType
+                    AddParams(contentTypeName, contentType.Schema, sb);
+
+                    // End of namespace and class
+                    AddEnd(sb);
+
+                    // write to file
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+        }
+
+        private Boolean findRTEReference(List<Field> Schema)
+        {
+            if (Schema == null)
+            {
+                return false;
+            }
+            var fields = Schema.FindAll(field =>
+            {
+                if (field.DataType == "text")
+                {
+                    return field.ReferenceTo != null;
+                }
+                else if (field.DataType == "blocks")
+                {
+                    foreach (Contenttype content in field.Blocks)
                     {
-                        // Add Const
-                        sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
-                        sb.AppendLine($"        public string Uid {{ get; set; }}");
+                        if (findRTEReference(content.Schema)) {
+                            return true;
+                        }
                     }
+                }
+                else if (field.DataType == "group" || field.DataType == "global_field")
+                {
+                    return findRTEReference(field.Schema);
+                }
+                return false;
+            });
+            return fields.Count > 0;
+        }
+
+        private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo)
+        {
+
+            Console.WriteLine($"Extracting Modular Blocks in {contentTypeName}.");
+
+            var fields = findRTEReference(contentType.Schema);
+
+            // Get modular Block within ContentType
+            var usingDirectiveList = new List<string>();
+            string modularUsingDirective = CreateModularBlocks(nameSpace, contentTypeName, contentType.Schema, directoryInfo);
+            if (modularUsingDirective != null)
+            {
+                usingDirectiveList.Add(modularUsingDirective);
+            }
+
+            Console.WriteLine($"Extracting Groups in {contentTypeName}.");
+
+            string groupUsingDirective = CreateGroup(nameSpace, contentTypeName, contentType.Schema, directoryInfo);
+            usingDirectiveList.Add(groupUsingDirective);
+
+            // Create File for ContentType
+            var file = shouldCreateFile(contentTypeName, directoryInfo);
+            if (file != null)
+            {
+                using (var sw = file.CreateText())
+                {
+                    var sb = new StringBuilder();
+                    // Adding using at start of file
+                    AddUsingDirectives(usingDirectiveList, sb);
+
+                    // Creating namespace 
+                    AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
+                    sb.AppendLine("using Contentstack.Utils.Interfaces;");
+
+                    var extendsClass = "IEmbeddedObject";
+
+                    if (fields == true)
+                    {
+                        extendsClass = "IEntryEmbedable, IEmbeddedObject";
+                    }
+
+                    // Creating Class
+                    AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
+
+                    // Add Const
+                    sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
+                    sb.AppendLine($"        public string Uid {{ get; set; }}");
+                    sb.AppendLine($"        [JsonProperty(propertyName: \"_content_type_uid\")]");
+                    sb.AppendLine($"        public string ContentTypeUid {{ get; set; }}");
 
                     //Adding Params to contentType
                     AddParams(contentTypeName, contentType.Schema, sb);
+
+                    if (fields == true)
+                    {
+                        sb.AppendLine($"        [JsonProperty(propertyName: \"_embedded_items\")]");
+                        sb.AppendLine("        public Dictionary<string, List<IEmbeddedObject>> embeddedItems { get; set; }");
+                    }
 
                     // End of namespace and class
                     AddEnd(sb);
@@ -528,7 +696,7 @@ using Newtonsoft.Json.Linq;";
                     }
                     else
                     {
-                        CreateFile(className, modularNameSpace, contentT, directory, modularBlockMainClass);
+                        CreateModularFile(className, modularNameSpace, contentT, directory, modularBlockMainClass);
                     }
                 }
 

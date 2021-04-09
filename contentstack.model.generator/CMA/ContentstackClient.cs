@@ -241,6 +241,7 @@ namespace contentstack.CMA
                 mainJson.Add(kvp.Key, kvp.Value);
             }
             mainJson.Add("include_count", "true");
+            mainJson.Add("include_global_field_schema", "true");
             mainJson.Add("skip", $"{skip}");
             try
             {
