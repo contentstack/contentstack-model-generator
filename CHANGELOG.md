@@ -1,3 +1,9 @@
+### Version: 0.4.0
+#### Date: Apr-09-2021
+
+##### New Feature:
+- Embedded Items feature support added to generate IEmbeddedObject and IEntryEmbedable
+
 ### Version: 0.3.0
 #### Date: Mar-12-2021
 
