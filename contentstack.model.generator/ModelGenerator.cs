@@ -54,6 +54,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Contentstack.Core.Models;
+using Contentstack.Utils.Models;
+using Contentstack.Utils.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;";
@@ -189,6 +191,8 @@ using Newtonsoft.Json.Linq;";
                     return "Asset";
                 case "boolean":
                     return "bool";
+                case "json":
+                    return "Node";
                 case "link":
                     return "ContentstackLink";
                 case "reference":
@@ -601,10 +605,9 @@ using Contentstack.Utils.Interfaces;
                     var sb = new StringBuilder();
                     // Adding using at start of file
                     AddUsingDirectives(usingDirectiveList, sb);
-
+                    
                     // Creating namespace 
                     AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
-                    sb.AppendLine("using Contentstack.Utils.Interfaces;");
 
                     var extendsClass = "IEmbeddedObject";
 

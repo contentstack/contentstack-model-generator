@@ -21,3 +21,4 @@ packages/
 *.nuspec
 *.trx
 */nupkg
+*/mono_crash*
