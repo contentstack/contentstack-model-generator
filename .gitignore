@@ -22,3 +22,5 @@ packages/
 *.trx
 */nupkg
 */mono_crash*
+.vscode
+.dccache
