@@ -45,7 +45,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.4.0")]
+        [VersionOption("0.4.2")]
         public bool Version { get; }
 
         private string _templateStart = @"using System;
@@ -357,6 +357,8 @@ using Contentstack.Utils.Interfaces;
 
                     sb.AppendLine($"         public override void WriteJson(JsonWriter writer, {className} value, JsonSerializer serializer)");
                     sb.AppendLine("         {");
+                    sb.AppendLine("             JToken t = JToken.FromObject(value);");
+                    sb.AppendLine("             t.WriteTo(writer);");
                     sb.AppendLine("         }");
 
                     // End of namespace and Enum
@@ -489,7 +491,7 @@ using Contentstack.Utils.Interfaces;
                     AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
 
                     //Adding Params to contentType
-                    AddParams(globalField.Title, globalField.Schema, sb);
+                    AddParams(FormatClassName(globalField.Title), globalField.Schema, sb);
 
                     // End of namespace and class
                     AddEnd(sb);
@@ -690,8 +692,7 @@ using Contentstack.Utils.Interfaces;
 
                 foreach (var contentT in mb.Blocks)
                 {
-                    
-                    string className = $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(contentT.Title)}";
+                    string className = $"{modularBlockMainClass}{FormatClassName(contentT.Title)}";
                     blockTypes[contentT.Uid] = className;
                     if (contentT.ReferenceTo != null)
                     {
@@ -1081,6 +1082,8 @@ using Contentstack.Utils.Interfaces;
 
                     sb.AppendLine($"        public override void WriteJson(JsonWriter writer, {className} value, JsonSerializer serializer)");
                     sb.AppendLine("        {");
+                    sb.AppendLine("             JToken t = JToken.FromObject(value);");
+                    sb.AppendLine("             t.WriteTo(writer);");
                     sb.AppendLine("        }");
 
                     // End of namespace and Enum

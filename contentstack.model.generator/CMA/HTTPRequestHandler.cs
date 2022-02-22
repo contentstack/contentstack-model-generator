@@ -38,7 +38,7 @@ namespace contentstack.CMA
             var request = (HttpWebRequest)WebRequest.Create(uri);
             request.Method = "GET";
             request.ContentType = "application/json";
-            request.Headers["x-user-agent"]= "contentstack-model-generator/0.3.0";
+            request.Headers["x-user-agent"]= "contentstack-model-generator/0.4.2";
 
             if (Headers != default(IDictionary<string, string>)) {
                 foreach (var header in Headers) {

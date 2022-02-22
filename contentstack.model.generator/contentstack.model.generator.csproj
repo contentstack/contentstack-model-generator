@@ -12,15 +12,15 @@
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.4.1</PackageVersion>
+    <PackageVersion>0.4.2</PackageVersion>
     <Authors>Contentstack</Authors>
-    <ReleaseVersion>0.4.1</ReleaseVersion>
+    <ReleaseVersion>0.4.2</ReleaseVersion>
     <RootNamespace>Contentstack.Model.Generator</RootNamespace>
      <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageReleaseNotes>Reference issue in new stack resolved</PackageReleaseNotes>
+    <PackageReleaseNotes>Modular block with Global field issue resolved</PackageReleaseNotes>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-  <PackageTags>v0.4.1</PackageTags>
+  <PackageTags>v0.4.2</PackageTags>
   <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 

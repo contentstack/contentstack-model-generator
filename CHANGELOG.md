@@ -1,3 +1,14 @@
+### Version: 0.4.2
+#### Date: Feb-25-2022
+
+- Modular block with global field class naming issue resolved
+
+### Version: 0.4.1
+#### Date: Jul-16-2021
+
+##### New Feature:
+- Feature Json RTE support added
+
 ### Version: 0.4.0
 #### Date: Apr-09-2021
 
