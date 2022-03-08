@@ -22,23 +22,6 @@ namespace contentstack.CMA
         public string EntryUid { get; set; }
 
 
-        //public string CacheFolderName
-        //{
-        //    get
-        //    {
-        //        if (string.IsNullOrEmpty(this._CacheFolderName))
-        //        {
-        //            this._CacheFolderName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "ContentstackCache");
-        //        }
-
-        //        return this._CacheFolderName;
-        //    }
-        //    set
-        //    {
-        //        this._CacheFolderName = value;
-        //    }
-        //}
-
         public string Content_Types
         {
             get { return this._ContentTypes ?? "content_types"; }
@@ -50,8 +33,6 @@ namespace contentstack.CMA
             get { return this._ContentTypes ?? "entries"; }
             set { this._ContentTypes = value; }
         }
-
-        // error messages
 
         #endregion
 

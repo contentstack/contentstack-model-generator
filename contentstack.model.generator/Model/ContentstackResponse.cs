@@ -6,9 +6,9 @@ namespace Contentstack.Model.Generator.Model
 {
     public class ContentstackResponse
     {
-        public List<Contenttype> listContentTypes;
+        public List<Contenttype> listContentTypes { get; set; }
 
-        public int Count;
+        public int Count { get; set; }
 
         public ContentstackResponse()
         {

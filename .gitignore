@@ -24,3 +24,4 @@ packages/
 */mono_crash*
 .vscode
 .dccache
+.sonarqube/

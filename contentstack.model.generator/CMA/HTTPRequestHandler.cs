@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace contentstack.CMA
 {
-    internal class HTTPRequestHandler
+    internal class HttpRequestHandler
     {
         public async Task<string> ProcessRequest(string Url, Dictionary<string, object> Headers, Dictionary<string, object> BodyJson, string FileName = null) {
 
@@ -44,21 +44,18 @@ namespace contentstack.CMA
                 foreach (var header in Headers) {
                     try {
                         request.Headers[header.Key] = header.Value.ToString();
-                    } catch {
-                        
+                    } catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
                     }
                 }
             }
 
-            var serializedresult = JsonConvert.SerializeObject(BodyJson);
-            byte[] requestBody = Encoding.UTF8.GetBytes(serializedresult);
             StreamReader reader = null;
             HttpWebResponse response = null;
 
             try {
-                //using (var postStream = await request.GetRequestStreamAsync()) {
-                //    await postStream.WriteAsync(requestBody, 0, requestBody.Length);
-                //}
 
                 response = (HttpWebResponse)await request.GetResponseAsync();
                 if (response != null) {
@@ -70,8 +67,10 @@ namespace contentstack.CMA
                 } else {
                     return null;
                 }
-            } catch (Exception we) {
-                throw we;
+            } catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             } finally {
                 if (reader != null) {
                     reader.Dispose();

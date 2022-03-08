@@ -6,24 +6,24 @@ namespace contentstack.model.generator.Model
     public class Field
     {
         [JsonProperty(PropertyName = "display_name")]
-        public string DisplayName;
+        public string DisplayName { get; set; }
 
-        public string Uid;
+        public string Uid { get; set; }
 
         [JsonProperty(PropertyName = "data_type")]
-        public string DataType;
+        public string DataType { get; set; }
 
         [JsonProperty(PropertyName = "multiple")]
-        public bool IsMultiple;
+        public bool IsMultiple { get; set; }
 
         [JsonProperty(PropertyName = "reference_to")]
-        public object ReferenceTo;
+        public object ReferenceTo { get; set; }
 
         [JsonProperty(PropertyName = "field_metadata")]
-        public MetaData Fieldmetadata;
+        public MetaData Fieldmetadata { get; set; }
 
-        public List<Contenttype> Blocks;
+        public List<Contenttype> Blocks { get; set; }
 
-        public List<Field> Schema;
+        public List<Field> Schema { get; set; }
     }
 }
