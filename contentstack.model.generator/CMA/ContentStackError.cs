@@ -2,28 +2,31 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Runtime.Serialization;
 
 namespace contentstack.CMA
 {
     /// <summary>
-    /// The ContentstackError class is abstraction of general exception class.
+    /// The ContentstackException class is abstraction of general exception class.
     /// </summary>
-    public class ContentstackError : Exception
+    [Serializable]
+    public class ContentstackException : Exception
     {
         #region Private Variables
         private string _ErrorMessage = string.Empty;
+        
         #endregion
 
         #region Public Variables
         /// <summary>
         /// This is http response status code of REST request to Contentstack.
         /// </summary>
-        public HttpStatusCode StatusCode;
+        public HttpStatusCode StatusCode { get; set; }
 
         /// <summary>
         /// This is error message.
         /// </summary>
-        public new string Message;
+        public new string Message { get; set; }
 
         /// <summary>
         /// This is error message.
@@ -58,32 +61,45 @@ namespace contentstack.CMA
 
         #region Public Constructors
         /// <summary>
-        /// The ContentstackError class is abstraction of general exception class.
+        /// The ContentstackException class is abstraction of general exception class.
         /// </summary>
-        public ContentstackError()
+        public ContentstackException()
         {
         }
 
         /// <summary>
-        /// The ContentstackError class is abstraction of general exception class.
+        /// The ContentstackException class is abstraction of general exception class.
         /// </summary>
         /// <param name="errorMessage"> Error Message</param>
-        public ContentstackError(string errorMessage)
-            : base(errorMessage)
+        public ContentstackException(string message)
+            : base(message)
         {
-            this.ErrorMessage = errorMessage;
+            this.ErrorMessage = message;
         }
 
         /// <summary>
-        /// The ContentstackError class is abstraction of general exception class.
+        /// The ContentstackException class is abstraction of general exception class.
         /// </summary>
         /// <param name="exception"> Exception</param>
-        public ContentstackError(Exception exception)
+        public ContentstackException(Exception exception)
             : base(exception.Message, exception.InnerException)
         {
             this.ErrorMessage = exception.Message;
         }
+
+        protected ContentstackException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+
+        public ContentstackException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+        }
         #endregion
+
 
     }
 }

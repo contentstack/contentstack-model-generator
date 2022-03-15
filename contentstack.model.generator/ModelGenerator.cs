@@ -45,10 +45,10 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.4.0")]
+        [VersionOption("0.4.2")]
         public bool Version { get; }
 
-        private string _templateStart = @"using System;
+        private readonly string _templateStart = @"using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -60,8 +60,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;";
 
-        private List<Contenttype> _contentTypes = new List<Contenttype>();
-        private Dictionary<string, List<Contenttype>> _modularBlocks = new Dictionary<string, List<Contenttype>>();
+        private readonly List<Contenttype> _contentTypes = new List<Contenttype>();
         StackResponse stack;
 
         public async Task<int> OnExecute(CommandLineApplication app, IConsole console)
@@ -217,14 +216,16 @@ using Newtonsoft.Json.Linq;";
             {
                 return $"List<{ dataType }>";
             }
-            return field.Fieldmetadata != null && field.Fieldmetadata.RefMultiple
-                ? $"List<{ dataType }>"
-                : (field.IsMultiple ? $"List<{ dataType }>" : dataType);
+            if (field.Fieldmetadata != null && field.Fieldmetadata.RefMultiple)
+            {
+                return $"List<{ dataType }>";
+            }
+            return (field.IsMultiple ? $"List<{ dataType }>" : dataType);
         }
 
         private string GetDatatypeForContentType(Field field)
         {
-            if (field.Fieldmetadata.RefMultipleContentType == false && !field.ReferenceTo.GetType().IsArray)
+            if (!field.Fieldmetadata.RefMultipleContentType && !field.ReferenceTo.GetType().IsArray)
             {
                 string referenceTo = (string)(field.ReferenceTo);
                 Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
@@ -247,15 +248,6 @@ using Newtonsoft.Json.Linq;";
                 }
             }
             return "object";
-        }
-
-        private string GetDefaultValueForField(Field field)
-        {
-            if (field.Fieldmetadata.Defaultvalue != null && field.Fieldmetadata.Defaultvalue.ToString().Length > 0 && field.DataType != "link")
-            {
-                return $" = {field.Fieldmetadata.Defaultvalue};";
-            }
-            return "";
         }
 
         private string FormatClassName(string name)
@@ -337,7 +329,7 @@ using Contentstack.Utils.Interfaces;
                     var includeElse = false;
                     foreach (var contentType in _contentTypes)
                     {
-                        sb.AppendLine($"                 {(includeElse == true ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"{contentType.Uid}\")");
+                        sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"{contentType.Uid}\")");
                         sb.AppendLine("                 {");
                         sb.AppendLine($"                    {FormatClassName(contentType.Title)} {FirstLetterToUpperCase(contentType.Uid)} = obj.ToObject<{FormatClassName(contentType.Title)}>();");
                         sb.AppendLine($"                    target.Add({FirstLetterToUpperCase(contentType.Uid)});");
@@ -345,7 +337,7 @@ using Contentstack.Utils.Interfaces;
                         includeElse = true;
                     }
                     // Embedded Asset Object
-                    sb.AppendLine($"                 {(includeElse == true ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
+                    sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
                     sb.AppendLine("                 {");
                     sb.AppendLine($"                    Asset asset = obj.ToObject<Asset>();");
                     sb.AppendLine($"                    target.Add(asset);");
@@ -357,6 +349,8 @@ using Contentstack.Utils.Interfaces;
 
                     sb.AppendLine($"         public override void WriteJson(JsonWriter writer, {className} value, JsonSerializer serializer)");
                     sb.AppendLine("         {");
+                    sb.AppendLine("             JToken t = JToken.FromObject(value);");
+                    sb.AppendLine("             t.WriteTo(writer);");
                     sb.AppendLine("         }");
 
                     // End of namespace and Enum
@@ -489,7 +483,7 @@ using Contentstack.Utils.Interfaces;
                     AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
 
                     //Adding Params to contentType
-                    AddParams(globalField.Title, globalField.Schema, sb);
+                    AddParams(FormatClassName(globalField.Title), globalField.Schema, sb);
 
                     // End of namespace and class
                     AddEnd(sb);
@@ -560,11 +554,9 @@ using Contentstack.Utils.Interfaces;
                 }
                 else if (field.DataType == "blocks")
                 {
-                    foreach (Contenttype content in field.Blocks)
+                    if (field.Blocks.Any(block => findRTEReference(block.Schema)))
                     {
-                        if (findRTEReference(content.Schema)) {
-                            return true;
-                        }
+                        return true;
                     }
                 }
                 else if (field.DataType == "group" || field.DataType == "global_field")
@@ -611,13 +603,13 @@ using Contentstack.Utils.Interfaces;
 
                     var extendsClass = "IEmbeddedObject";
 
-                    if (fields == true)
+                    if (fields)
                     {
                         extendsClass = "IEntryEmbedable, IEmbeddedObject";
                     }
 
                     // Creating Class
-                    AddClass(extendsClass != null ? $"{contentTypeName} : {extendsClass}" : contentTypeName, sb);
+                    AddClass($"{contentTypeName} : {extendsClass}", sb);
 
                     // Add Const
                     sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
@@ -628,7 +620,7 @@ using Contentstack.Utils.Interfaces;
                     //Adding Params to contentType
                     AddParams(contentTypeName, contentType.Schema, sb);
 
-                    if (fields == true)
+                    if (fields)
                     {
                         sb.AppendLine($"        [JsonProperty(propertyName: \"_embedded_items\")]");
                         sb.AppendLine("        public Dictionary<string, List<IEmbeddedObject>> embeddedItems { get; set; }");
@@ -651,7 +643,7 @@ using Contentstack.Utils.Interfaces;
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 var prompt = Prompt.GetYesNo($"The folder already contains a file with the name {file.Name}. Do you want to overwrite it?", true);
                 Console.ResetColor();
-                if (prompt == false)
+                if (prompt)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Skipping {file.Name}");
@@ -666,7 +658,7 @@ using Contentstack.Utils.Interfaces;
         private DirectoryInfo CreateDirectory(string path)
         {
             var dir = new DirectoryInfo(path);
-            if (dir.Exists == false)
+            if (dir.Exists)
             {
                 Console.WriteLine($"Path {path} does not exist and will be created.");
                 dir.Create();
@@ -690,8 +682,7 @@ using Contentstack.Utils.Interfaces;
 
                 foreach (var contentT in mb.Blocks)
                 {
-                    
-                    string className = $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(contentT.Title)}";
+                    string className = $"{modularBlockMainClass}{FormatClassName(contentT.Title)}";
                     blockTypes[contentT.Uid] = className;
                     if (contentT.ReferenceTo != null)
                     {
@@ -759,26 +750,24 @@ using Contentstack.Utils.Interfaces;
                 {
                     sb.AppendLine($"        [JsonProperty(propertyName: \"{field.Uid}\")]");
                 }
-                if (field.DataType == "text")
+                if (field.DataType == "text" && field.Fieldmetadata.isMarkdown)
                 {
-                    if (field.Fieldmetadata.isMarkdown)
-                    {
-                        sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{");
+                    sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{");
 
-                        sb.AppendLine($"            set");
-                        sb.AppendLine($"            {{");
-                        sb.AppendLine($"                this.{FirstLetterToUpperCase(field.Uid)}Store = value;");
-                        sb.AppendLine($"            }}");
+                    sb.AppendLine($"            set");
+                    sb.AppendLine($"            {{");
+                    sb.AppendLine($"                this.{FirstLetterToUpperCase(field.Uid)}Store = value;");
+                    sb.AppendLine($"            }}");
 
-                        sb.AppendLine($"            get");
-                        sb.AppendLine($"            {{");
-                        sb.AppendLine($"                return this.{FirstLetterToUpperCase(field.Uid)}Store.{(field.IsMultiple ? "ToListHtml()" : "ToHtml()" )};");
-                        sb.AppendLine($"            }}");
+                    sb.AppendLine($"            get");
+                    sb.AppendLine($"            {{");
+                    sb.AppendLine($"                return this.{FirstLetterToUpperCase(field.Uid)}Store.{(field.IsMultiple ? "ToListHtml()" : "ToHtml()" )};");
+                    sb.AppendLine($"            }}");
 
-                        sb.AppendLine($"        }}");
-                        sb.AppendLine($"        private {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)}Store;");
-                        continue;
-                    }
+                    sb.AppendLine($"        }}");
+                    sb.AppendLine($"        private {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)}Store;");
+                    continue;
+                    
                 }
                 sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}"); 
             }
@@ -919,12 +908,12 @@ using Contentstack.Utils.Interfaces;
                     AddEnum(enumName, sb);
 
                     var count = blockTypes.Count;
-                    foreach (var blocks in blockTypes)
+                    foreach (var key in blockTypes.Select(blocks => blocks.Key))
                     {
                         count--;
                         var appendEnd = count == 0 ? "" : ",";
-                        sb.AppendLine($"        [DisplayName(displayName: \"{blocks.Key}\")]");
-                        sb.AppendLine($"        {FirstLetterToUpperCase(blocks.Key)}{appendEnd}");
+                        sb.AppendLine($"        [DisplayName(displayName: \"{key}\")]");
+                        sb.AppendLine($"        {FirstLetterToUpperCase(key)}{appendEnd}");
                     }
 
                     // End of namespace and Enum
@@ -1081,6 +1070,8 @@ using Contentstack.Utils.Interfaces;
 
                     sb.AppendLine($"        public override void WriteJson(JsonWriter writer, {className} value, JsonSerializer serializer)");
                     sb.AppendLine("        {");
+                    sb.AppendLine("             JToken t = JToken.FromObject(value);");
+                    sb.AppendLine("             t.WriteTo(writer);");
                     sb.AppendLine("        }");
 
                     // End of namespace and Enum

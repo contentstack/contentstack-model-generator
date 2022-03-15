@@ -23,19 +23,16 @@ namespace contentstack.CMA
             get;
             set;
         }
-        private ContentstackOptions _options;
 
         internal string _SyncUrl
          {
             get
             {
-                Config config = this.config;
                 return String.Format("{0}/stacks/sync",
                                      config.BaseUrl);
             }
         }
-        private Dictionary<string, object> UrlQueries = new Dictionary<string, object>();
-        private Dictionary<string, object> _Headers = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> UrlQueries = new Dictionary<string, object>();
 
         private string _StackUrl
         {
@@ -57,11 +54,11 @@ namespace contentstack.CMA
                 return String.Format("{0}/global_fields/", config.BaseUrl);
             }
         }
-        private Dictionary<string, object> _StackHeaders = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> _StackHeaders = new Dictionary<string, object>();
 
         public void SetHeader(string key, string value)
         {
-            if (key != null & value != null)
+            if (key != null && value != null)
             {
                 if (this._LocalHeaders.ContainsKey(key))
                     this._LocalHeaders.Remove(key);
@@ -71,7 +68,7 @@ namespace contentstack.CMA
         }
         public ContentstackClient(ContentstackOptions options)
         {
-            _options = options;
+            ContentstackOptions _options = options;
             this.StackApiKey = _options.ApiKey;
             this._LocalHeaders = new Dictionary<string, object>();
             this.SetHeader("api_key", _options.ApiKey);
@@ -101,12 +98,12 @@ namespace contentstack.CMA
         #endregion
 
         #region Internal Constructor
-        internal static ContentstackError GetContentstackError(Exception ex)
+        internal static ContentstackException GetContentstackException(Exception ex)
         {
             Int32 errorCode = 0;
             string errorMessage = string.Empty;
             HttpStatusCode statusCode = HttpStatusCode.InternalServerError;
-            ContentstackError contentstackError = new ContentstackError(ex);
+            ContentstackException ContentstackException = new ContentstackException(ex);
             Dictionary<string, object> errors = null;
 
             try
@@ -142,7 +139,7 @@ namespace contentstack.CMA
                 errorMessage = ex.Message;
             }
 
-            contentstackError = new ContentstackError()
+            ContentstackException = new ContentstackException()
             {
                 ErrorCode = errorCode,
                 ErrorMessage = errorMessage,
@@ -150,7 +147,7 @@ namespace contentstack.CMA
                 Errors = errors
             };
 
-            return contentstackError;
+            return ContentstackException;
         }
         internal ContentstackClient(String stackApiKey)
         {
@@ -176,7 +173,7 @@ namespace contentstack.CMA
             Dictionary<String, object> headerAll = new Dictionary<string, object>();
             Dictionary<string, object> mainJson = new Dictionary<string, object>();
 
-            if (headers != null && headers.Count() > 0)
+            if (headers != null && headers.Count > 0)
             {
                 foreach (var header in headers)
                 {
@@ -191,7 +188,7 @@ namespace contentstack.CMA
            
             try
             {
-                HTTPRequestHandler RequestHandler = new HTTPRequestHandler();
+                HttpRequestHandler RequestHandler = new HttpRequestHandler();
                 var outputResult = await RequestHandler.ProcessRequest(_StackUrl, headers, mainJson);
                 JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
                 SerializerSettings.DateFormatString = "yyyy-MM-dd";
@@ -201,7 +198,7 @@ namespace contentstack.CMA
             }
             catch (Exception ex)
             {
-                throw GetContentstackError(ex);
+                throw GetContentstackException(ex);
             }
         }
 
@@ -213,7 +210,7 @@ namespace contentstack.CMA
             Dictionary<String, object> headerAll = new Dictionary<string, object>();
             Dictionary<string, object> mainJson = new Dictionary<string, object>();
 
-            if (headers != null && headers.Count() > 0)
+            if (headers != null && headers.Count > 0)
             {
                 foreach (var header in headers)
                 {
@@ -230,7 +227,7 @@ namespace contentstack.CMA
             mainJson.Add("skip", $"{skip}");
             try
             {
-                HTTPRequestHandler RequestHandler = new HTTPRequestHandler();
+                HttpRequestHandler RequestHandler = new HttpRequestHandler();
                 var outputResult = await RequestHandler.ProcessRequest(_Url, headers, mainJson);
                 JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
                 IList contentTypes = (IList)data["content_types"];
@@ -244,7 +241,7 @@ namespace contentstack.CMA
             }
             catch (Exception ex)
             {
-                throw GetContentstackError(ex);
+                throw GetContentstackException(ex);
             }
         }
 
@@ -255,7 +252,7 @@ namespace contentstack.CMA
             Dictionary<String, object> headerAll = new Dictionary<string, object>();
             Dictionary<string, object> mainJson = new Dictionary<string, object>();
             
-            if (headers != null && headers.Count() > 0)
+            if (headers != null && headers.Count > 0)
             {
                 foreach (var header in headers)
                 {
@@ -271,7 +268,7 @@ namespace contentstack.CMA
             mainJson.Add("skip", $"{skip}");
             try
             {
-                HTTPRequestHandler RequestHandler = new HTTPRequestHandler();
+                HttpRequestHandler RequestHandler = new HttpRequestHandler();
                 var outputResult = await RequestHandler.ProcessRequest(_GlobalFieldsUrl, headers, mainJson);
                 JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
                 IList globalFields = (IList)data["global_fields"];
@@ -286,7 +283,7 @@ namespace contentstack.CMA
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                throw GetContentstackError(ex);
+                throw GetContentstackException(ex);
             }
         }
        
@@ -317,16 +314,11 @@ namespace contentstack.CMA
                     return classHeaders;
 
                 }
-                else
-                {
-                    return localHeader;
-                }
 
+                return localHeader;
             }
-            else
-            {
-                return _StackHeaders;
-            }
+
+            return _StackHeaders;
         }
         #endregion
 

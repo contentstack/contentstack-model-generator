@@ -9,6 +9,11 @@ namespace contentstack.model.generator
         public const int EXCEPTION = 2;
         public const int ERROR = 1;
         public const int OK = 0;
+
+        protected Program()
+        {
+        }
+
         static async Task<int> Main(string[] args)
         {
             try
