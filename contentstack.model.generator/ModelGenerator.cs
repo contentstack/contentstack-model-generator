@@ -643,7 +643,7 @@ using Contentstack.Utils.Interfaces;
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 var prompt = Prompt.GetYesNo($"The folder already contains a file with the name {file.Name}. Do you want to overwrite it?", true);
                 Console.ResetColor();
-                if (prompt)
+                if (!prompt)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Skipping {file.Name}");
@@ -658,7 +658,7 @@ using Contentstack.Utils.Interfaces;
         private DirectoryInfo CreateDirectory(string path)
         {
             var dir = new DirectoryInfo(path);
-            if (dir.Exists)
+            if (!dir.Exists)
             {
                 Console.WriteLine($"Path {path} does not exist and will be created.");
                 dir.Create();
