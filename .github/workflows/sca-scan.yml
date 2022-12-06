@@ -10,7 +10,7 @@ jobs:
         uses: actions/checkout@master
       - name: Run Dotnet Restore
         run: |
-          dotnet restore
+          dotnet restore ./contentstack.model.generator/contentstack.model.generator
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/dotnet@master
         env:
