@@ -26,6 +26,11 @@ namespace contentstack.CMA
         public string Host { get; set; }
 
         /// <summary>
+        /// The branch header in the API request to fetch or manage modules located within specific branches.
+        /// </summary>
+        public string Branch { get; set; }
+
+        /// <summary>
         /// The Version number for the ContentStack API.
         /// </summary>
         public string Version { get; set; }

@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace contentstack.model.generator.Model
 {
@@ -9,15 +8,21 @@ namespace contentstack.model.generator.Model
         public bool RefMultiple { get; set; }
 
         [JsonProperty(PropertyName = "default_value")]
-        public object Defaultvalue { get; set; }
+        public object DefaultValue { get; set; }
 
         [JsonProperty(PropertyName = "ref_multiple_content_types")]
         public bool RefMultipleContentType { get; set; }
 
         [JsonProperty(PropertyName = "allow_rich_text")]
-        public bool isRichText { get; set; }
+        public bool IsRichText { get; set; }
 
         [JsonProperty(PropertyName = "markdown")]
-        public bool isMarkdown { get; set; }
+        public bool IsMarkdown { get; set; }
+
+        [JsonProperty(PropertyName = "extension")]
+        public bool IsExtension { get; set; }
+
+        [JsonProperty(PropertyName = "allow_json_rte")]
+        public bool IsJsonRTE { get; set; }
     }
 }

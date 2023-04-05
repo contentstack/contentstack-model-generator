@@ -16,8 +16,10 @@ Once you install ```contentstack.model.generator```  run ```--help``` to view av
 | -- | -- | -- |
 | `-a` | `--api-key` | The Stack API key for the Content Management API |
 | `-A` | `--authtoken` | The Authtoken for the Content Management API |
+| `-b` | `--branch` | The branch header in the API request to fetch or manage modules located within specific branches. |
 | `-e` | `--endpoint` | The Contentstack Host for the Content Management API |
 | `-n` | `--namespace` | The namespace the classes should be created in |
+| `-N` | `--is-nullable` | The features that protect against throwing a System.NullReferenceException can be disruptive when turned on. |
 | `-f` | `--force` | Automatically overwrite files that already exist |
 | `-m` | `--modular-block-prefix` | The Modular block Class Prefix. |
 | `-g` | `--group-prefix` | The Group Class Prefix. |
@@ -41,9 +43,15 @@ To create classes with namespace run following command:
 contentstack.model.generator -a <stack_api_key> -A <authtoken> -n YourProject.Models
 ```
 
+### Example 4
+To allow `Nullable` annotation context in model creation run following command
+```
+contentstack.model.generator -a <stack_api_key> -A <authtoken> -N
+```
+
 ### MIT License
 
-Copyright (c) 2012-2021 Contentstack
+Copyright (c) 2012-2023 Contentstack
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

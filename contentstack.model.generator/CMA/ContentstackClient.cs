@@ -82,6 +82,10 @@ namespace contentstack.CMA
             {
                 cnfig.Version = _options.Version;
             }
+
+            if (_options.Branch != null) {
+                this.SetHeader("branch", _options.Branch);
+            }
             this.SetConfig(cnfig);
 
         }

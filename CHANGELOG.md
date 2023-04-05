@@ -1,3 +1,14 @@
+### Version: 0.4.4
+#### Date: Apr-12-2023
+
+- Support for nullable annotation context and nullable warning context to avoid runtime errors.
+- Support for branch specific model generation added
+
+### Version: 0.4.3
+#### Date: Feb-25-2022
+
+- Upgraded to Net 6.0 compatibility.
+
 ### Version: 0.4.2
 #### Date: Feb-25-2022
 

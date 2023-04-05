@@ -27,6 +27,9 @@ namespace contentstack.model.generator
         [Required(ErrorMessage = "You must specify the Contentstack authtoken for the Content Management API")]
         public string Authtoken { get; set; }
 
+        [Option(CommandOptionType.SingleValue, ShortName = "b", LongName = "branch", Description = "The branch header in the API request to fetch or manage modules located within specific branches.")]
+        public string Branch { get; set; }
+
         [Option(CommandOptionType.SingleValue, ShortName = "e", LongName = "endpoint", Description = "The Contentstack Host for the Content Management API")]
         public string Host { get; set; } = "api.contentstack.io";
 
@@ -45,7 +48,10 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.SingleValue, Description = "Path to the file or directory to create files in")]
         public string Path { get; }
 
-        [VersionOption("0.4.2")]
+        [Option(CommandOptionType.NoValue, ShortName = "N", LongName = "is-nullable", Description = "The features that protect against throwing a System.NullReferenceException can be disruptive when turned on.")]
+        public bool IsNullable { get; }
+
+        [VersionOption("0.4.4")]
         public bool Version { get; }
 
         private readonly string _templateStart = @"using System;
@@ -70,7 +76,8 @@ using Newtonsoft.Json.Linq;";
             {
                 ApiKey = ApiKey,
                 Authtoken = Authtoken,
-                Host = Host
+                Host = Host,
+                Branch = Branch
             };
             var client = new ContentstackClient(options);
 
@@ -163,6 +170,11 @@ using Newtonsoft.Json.Linq;";
             return Program.OK;
         }
 
+        private string nullableString()
+        {
+            return IsNullable ? "?" : "";
+        }
+
         private async Task<int> getContentTypes(ContentstackClient client, int skip)
         {
             ContentstackResponse contentstackResponse = await client.GetContentTypes(skip: skip);
@@ -191,7 +203,10 @@ using Newtonsoft.Json.Linq;";
                 case "boolean":
                     return "bool";
                 case "json":
-                    return "Node";
+                    if (field.FieldMetadata != null && field.FieldMetadata.IsJsonRTE) {
+                        return "Node";
+                    }
+                    return "dynamic";
                 case "link":
                     return "ContentstackLink";
                 case "reference":
@@ -216,7 +231,7 @@ using Newtonsoft.Json.Linq;";
             {
                 return $"List<{ dataType }>";
             }
-            if (field.Fieldmetadata != null && field.Fieldmetadata.RefMultiple)
+            if (field.FieldMetadata != null && field.FieldMetadata.RefMultiple)
             {
                 return $"List<{ dataType }>";
             }
@@ -225,7 +240,7 @@ using Newtonsoft.Json.Linq;";
 
         private string GetDatatypeForContentType(Field field)
         {
-            if (!field.Fieldmetadata.RefMultipleContentType && !field.ReferenceTo.GetType().IsArray)
+            if (!field.FieldMetadata.RefMultipleContentType && !field.ReferenceTo.GetType().IsArray)
             {
                 string referenceTo = (string)(field.ReferenceTo);
                 Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
@@ -319,7 +334,7 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine($"            return new List<IEmbeddedObject>();");
                     sb.AppendLine("         }");
 
-                    sb.AppendLine($"         public override {className} ReadJson(JsonReader reader, Type objectType, {className} existingValue, bool hasExistingValue, JsonSerializer serializer)");
+                    sb.AppendLine($"         public override {className}{nullableString()} ReadJson(JsonReader reader, Type objectType, {className}{nullableString()} existingValue, bool hasExistingValue, JsonSerializer serializer)");
                     sb.AppendLine("         {");
                     sb.AppendLine("             JArray jArray = JArray.Load(reader);");
                     sb.AppendLine($"             {className} target = Create(objectType, jArray);");
@@ -329,28 +344,46 @@ using Contentstack.Utils.Interfaces;
                     var includeElse = false;
                     foreach (var contentType in _contentTypes)
                     {
-                        sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"{contentType.Uid}\")");
+                        sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string{nullableString()})obj.GetValue(\"_content_type_uid\") == \"{contentType.Uid}\")");
                         sb.AppendLine("                 {");
-                        sb.AppendLine($"                    {FormatClassName(contentType.Title)} {FirstLetterToUpperCase(contentType.Uid)} = obj.ToObject<{FormatClassName(contentType.Title)}>();");
+                        sb.AppendLine($"                    {FormatClassName(contentType.Title)}{nullableString()} {FirstLetterToUpperCase(contentType.Uid)} = obj.ToObject<{FormatClassName(contentType.Title)}>();");
+                        if (IsNullable) {
+                            sb.AppendLine($"                    if ({FirstLetterToUpperCase(contentType.Uid)} != null) {{");
+                        }
                         sb.AppendLine($"                    target.Add({FirstLetterToUpperCase(contentType.Uid)});");
+                        if (IsNullable) {
+                            sb.AppendLine($"                    }}");
+                        }
                         sb.AppendLine("                 }");
                         includeElse = true;
                     }
                     // Embedded Asset Object
-                    sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string)obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
+                    sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string{nullableString()})obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
                     sb.AppendLine("                 {");
-                    sb.AppendLine($"                    Asset asset = obj.ToObject<Asset>();");
+                    sb.AppendLine($"                    Asset{nullableString()} asset = obj.ToObject<Asset>();");
+                    if (IsNullable) {
+                        sb.AppendLine($"                    if (asset != null) {{");
+                    }
                     sb.AppendLine($"                    target.Add(asset);");
+                    if (IsNullable) {
+                        sb.AppendLine($"                    }}");
+                    }
                     sb.AppendLine("                 }");
 
                     sb.AppendLine("             }");
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
 
-                    sb.AppendLine($"         public override void WriteJson(JsonWriter writer, {className} value, JsonSerializer serializer)");
+                    sb.AppendLine($"         public override void WriteJson(JsonWriter writer, {className}{nullableString()} value, JsonSerializer serializer)");
                     sb.AppendLine("         {");
+                    if (IsNullable) {
+                        sb.AppendLine($"             if (value != null) {{");
+                    }
                     sb.AppendLine("             JToken t = JToken.FromObject(value);");
                     sb.AppendLine("             t.WriteTo(writer);");
+                    if (IsNullable) {
+                        sb.AppendLine($"             }}");
+                    }
                     sb.AppendLine("         }");
 
                     // End of namespace and Enum
@@ -424,8 +457,8 @@ using Contentstack.Utils.Interfaces;
                     // Creating Class
                     AddClass(contentstackLinkClass, sb);
 
-                    sb.AppendLine("         public string Title { get; set; }");
-                    sb.AppendLine("         public string Href { get; set; }");
+                    sb.AppendLine($"         public string{nullableString()} Title {{ get; set; }}");
+                    sb.AppendLine($"         public string{nullableString()} Href {{ get; set; }}");
 
                     // End of namespace and class
                     AddEnd(sb);
@@ -613,9 +646,9 @@ using Contentstack.Utils.Interfaces;
 
                     // Add Const
                     sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
-                    sb.AppendLine($"        public string Uid {{ get; set; }}");
+                    sb.AppendLine($"        public string{nullableString()} Uid {{ get; set; }}");
                     sb.AppendLine($"        [JsonProperty(propertyName: \"_content_type_uid\")]");
-                    sb.AppendLine($"        public string ContentTypeUid {{ get; set; }}");
+                    sb.AppendLine($"        public string{nullableString()} ContentTypeUid {{ get; set; }}");
 
                     //Adding Params to contentType
                     AddParams(contentTypeName, contentType.Schema, sb);
@@ -623,7 +656,7 @@ using Contentstack.Utils.Interfaces;
                     if (fields)
                     {
                         sb.AppendLine($"        [JsonProperty(propertyName: \"_embedded_items\")]");
-                        sb.AppendLine("        public Dictionary<string, List<IEmbeddedObject>> embeddedItems { get; set; }");
+                        sb.AppendLine("        public Dictionary<string, List<IEmbeddedObject>>{nullableString()} embeddedItems { get; set; }");
                     }
 
                     // End of namespace and class
@@ -750,7 +783,7 @@ using Contentstack.Utils.Interfaces;
                 {
                     sb.AppendLine($"        [JsonProperty(propertyName: \"{field.Uid}\")]");
                 }
-                if (field.DataType == "text" && field.Fieldmetadata.isMarkdown)
+                if (field.DataType == "text" && field.FieldMetadata.IsMarkdown)
                 {
                     sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{");
 
@@ -765,11 +798,11 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine($"            }}");
 
                     sb.AppendLine($"        }}");
-                    sb.AppendLine($"        private {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)}Store;");
+                    sb.AppendLine($"        private {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)}Store = \"\";");
                     continue;
                     
                 }
-                sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}"); 
+                sb.AppendLine($"        public {GetDatatypeForField(field, contentType)}{nullableString()} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}"); 
             }
         }
 
@@ -1060,18 +1093,31 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine($"        return new {className}();");
                     sb.AppendLine("        }");
 
-                    sb.AppendLine($"        public override {className} ReadJson(JsonReader reader, Type objectType, {className} existingValue, bool hasExistingValue, JsonSerializer serializer)");
+                    sb.AppendLine($"        public override {className}{nullableString()} ReadJson(JsonReader reader, Type objectType, {className}{nullableString()} existingValue, bool hasExistingValue, JsonSerializer serializer)");
                     sb.AppendLine("        {");
                     sb.AppendLine("             JObject jObject = JObject.Load(reader);");
                     sb.AppendLine($"             {className} target = Create(objectType, jObject);");
-                    sb.AppendLine("             serializer.Populate(jObject.GetValue(ContentstackHelper.GetDescription(target.BlockType)).CreateReader(), target);");
+                    sb.AppendLine("             var token = jObject.GetValue(ContentstackHelper.GetDescription(target.BlockType));");
+                    if (IsNullable) {
+                        sb.AppendLine($"             if (token != null) {{");
+                    }
+                    sb.AppendLine("             serializer.Populate(token.CreateReader(), target);");
+                    if (IsNullable) {
+                        sb.AppendLine($"             }}");
+                    }
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
 
-                    sb.AppendLine($"        public override void WriteJson(JsonWriter writer, {className} value, JsonSerializer serializer)");
+                    sb.AppendLine($"        public override void WriteJson(JsonWriter writer, {className}{nullableString()} value, JsonSerializer serializer)");
                     sb.AppendLine("        {");
+                    if (IsNullable) {
+                        sb.AppendLine($"             if (value != null) {{");
+                    }
                     sb.AppendLine("             JToken t = JToken.FromObject(value);");
                     sb.AppendLine("             t.WriteTo(writer);");
+                    if (IsNullable) {
+                        sb.AppendLine($"             }}");
+                    }
                     sb.AppendLine("        }");
 
                     // End of namespace and Enum
