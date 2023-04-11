@@ -69,7 +69,6 @@ namespace contentstack.CMA
                 }
             } catch (Exception e)
             {
-                Console.WriteLine(e);
                 throw;
             } finally {
                 if (reader != null) {

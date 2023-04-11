@@ -20,7 +20,7 @@ namespace contentstack.model.generator.Model
         public object ReferenceTo { get; set; }
 
         [JsonProperty(PropertyName = "field_metadata")]
-        public MetaData Fieldmetadata { get; set; }
+        public MetaData FieldMetadata { get; set; }
 
         public List<Contenttype> Blocks { get; set; }
 
