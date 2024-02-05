@@ -51,7 +51,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.NoValue, ShortName = "N", LongName = "is-nullable", Description = "The features that protect against throwing a System.NullReferenceException can be disruptive when turned on.")]
         public bool IsNullable { get; }
 
-        [VersionOption("0.4.4")]
+        [VersionOption("0.4.5")]
         public bool Version { get; }
 
         private readonly string _templateStart = @"using System;
@@ -456,8 +456,9 @@ using Contentstack.Utils.Interfaces;
 
                     // Creating Class
                     AddClass(contentstackLinkClass, sb);
-
+                    sb.AppendLine($"         [JsonProperty(propertyName: \"title\")]");
                     sb.AppendLine($"         public string{nullableString()} Title {{ get; set; }}");
+                    sb.AppendLine($"         [JsonProperty(propertyName: \"href\")]");
                     sb.AppendLine($"         public string{nullableString()} Href {{ get; set; }}");
 
                     // End of namespace and class
@@ -779,10 +780,7 @@ using Contentstack.Utils.Interfaces;
         {
             foreach (var field in schema)
             {
-                if (field.Uid.Contains("_"))
-                {
-                    sb.AppendLine($"        [JsonProperty(propertyName: \"{field.Uid}\")]");
-                }
+                sb.AppendLine($"        [JsonProperty(propertyName: \"{field.Uid}\")]");
                 if (field.DataType == "text" && field.FieldMetadata.IsMarkdown)
                 {
                     sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{");

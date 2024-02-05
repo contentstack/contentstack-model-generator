@@ -1,3 +1,8 @@
+### Version: 0.4.5
+#### Date: Feb-06-2024
+
+- Extended JsonProperty usage all fields, irrespective of underscore presence in the field name.
+
 ### Version: 0.4.4
 #### Date: Apr-12-2023
 
