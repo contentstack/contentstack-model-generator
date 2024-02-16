@@ -51,7 +51,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.NoValue, ShortName = "N", LongName = "is-nullable", Description = "The features that protect against throwing a System.NullReferenceException can be disruptive when turned on.")]
         public bool IsNullable { get; }
 
-        [VersionOption("0.4.5")]
+        [VersionOption("0.4.6")]
         public bool Version { get; }
 
         private readonly string _templateStart = @"using System;
@@ -647,6 +647,7 @@ using Contentstack.Utils.Interfaces;
 
                     // Add Const
                     sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
+                    sb.AppendLine($"        [JsonProperty(propertyName: \"uid\")]");                    
                     sb.AppendLine($"        public string{nullableString()} Uid {{ get; set; }}");
                     sb.AppendLine($"        [JsonProperty(propertyName: \"_content_type_uid\")]");
                     sb.AppendLine($"        public string{nullableString()} ContentTypeUid {{ get; set; }}");
