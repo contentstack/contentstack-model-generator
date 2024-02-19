@@ -1,3 +1,5 @@
 fileignoreconfig:
   - filename: contentstack.model.generator/CMA/ContentstackClient.cs
     checksum: 1926a649b50f75d3b27a8a443d16a88e129d0a8182bef470aa6ccff1619e14d5
+  - filename: .github/workflows/nuget-publish.yml
+    checksum: f6bb3a87cdab98706bb2f9fbe5657b17d1ae6bcbec923d8f067d407b2bc14ce0

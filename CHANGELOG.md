@@ -1,3 +1,8 @@
+### Version: 0.4.6
+#### Date: Feb-19-2024
+
+- Fix JsonProperty tag to get added for Uid field.
+
 ### Version: 0.4.5
 #### Date: Feb-06-2024
 
