@@ -17,7 +17,7 @@ jobs:
       - name: Build solution and generate NuGet package
         run: |
           cd contentstack.model.generator
-          dotnet pack -c Release -o nupkg --source-link --debug
+          dotnet pack -c Release -o nupkg --debug
 
       - name: Push generated package to Nuget registry
         run: |
@@ -38,7 +38,7 @@ jobs:
       - name: Build solution and generate NuGet package
         run: |
           cd contentstack.model.generator
-          dotnet pack -c Release -o nupkg --source-link --debug
+          dotnet pack -c Release -o nupkg --debug
 
       - name: Push generated package to GitHub registry
         run: |
