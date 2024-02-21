@@ -21,6 +21,8 @@ jobs:
 
       - name: Push generated package to Nuget registry
         run: |
+          pwd
+          ls
           cd nupkg
           dotnet nuget push "contentstack.model.generator.*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols false --source https://api.nuget.org/v3/index.json
 
@@ -42,5 +44,7 @@ jobs:
 
       - name: Push generated package to GitHub registry
         run: |
+          pwd
+          ls
           cd nupkg
           dotnet nuget push "contentstack.model.generator.*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols false --source https://api.nuget.org/v3/index.json
