@@ -6,7 +6,7 @@ on:
     types: [created]
 jobs:
   publish-nuget:  
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v1
@@ -25,7 +25,7 @@ jobs:
           dotnet nuget push "contentstack.model.generator.*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols false --source https://api.nuget.org/v3/index.json
 
   publish-git:  
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v1
