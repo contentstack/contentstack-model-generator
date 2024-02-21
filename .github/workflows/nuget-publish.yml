@@ -17,14 +17,13 @@ jobs:
       - name: Build solution and generate NuGet package
         run: |
           cd contentstack.model.generator
-          dotnet pack -c Release -o nupkg
+          dotnet pack -c Release -o out
       - run: |
-          pwd
           ls
       - name: Push generated package to Nuget registry
         run: |
-          cd nupkg
-          dotnet nuget push "contentstack.model.generator.*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols false --source https://api.nuget.org/v3/index.json
+          cd out
+          dotnet nuget push "contentstack.model.generator.*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols true --source https://api.nuget.org/v3/index.json
 
   publish-git:  
     runs-on: windows-latest
@@ -40,11 +39,9 @@ jobs:
       - name: Build solution and generate NuGet package
         run: |
           cd contentstack.model.generator
-          dotnet pack -c Release -o nupkg
+          dotnet pack -c Release -o out
 
       - name: Push generated package to GitHub registry
         run: |
-          pwd
-          ls
-          cd nupkg
-          dotnet nuget push "contentstack.model.generator.*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols false --source https://api.nuget.org/v3/index.json
+          cd out
+          dotnet nuget push "contentstack.model.generator.*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols true --source https://api.nuget.org/v3/index.json
