@@ -18,11 +18,6 @@ jobs:
         run: |
           cd contentstack.model.generator
           dotnet pack -c Release -o out
-      - run: |
-          ls
-      - run: |
-          cd contentstack.model.generator
-          ls
       - name: Push generated package to Nuget registry
         run: |
           cd contentstack.model.generator
