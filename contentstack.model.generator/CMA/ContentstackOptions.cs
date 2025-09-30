@@ -34,6 +34,20 @@ namespace contentstack.CMA
         /// The Version number for the ContentStack API.
         /// </summary>
         public string Version { get; set; }
+
+
+        public bool IsOAuth { get; set; } = false;
+        public string Authorization { get; set; }
+
+        // OAuth specific properties
+        public string OAuthClientId { get; set; }
+        public string OAuthClientSecret { get; set; }
+        public string OAuthRedirectUri { get; set; }
+        public string OAuthAppId { get; set; }
+        public string[] OAuthScopes { get; set; }
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+        public DateTime? TokenExpiresAt { get; set; }
     }
 }
 

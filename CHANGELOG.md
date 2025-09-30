@@ -1,3 +1,8 @@
+### Version: 0.5.0
+#### Date: Oct-05-2025
+
+- Feat: Added OAuth Support in Dotnet Model Generator
+
 ### Version: 0.4.6
 #### Date: Feb-19-2024
 
