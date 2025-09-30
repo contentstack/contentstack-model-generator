@@ -106,7 +106,7 @@ Here's what you'll see when running an OAuth command:
 
 $ contentstack.model.generator --oauth -a <api_key> --client-id myclient123 --redirect-uri http://localhost:8184
 
-Contentstack Model Generator v0.4.6
+Contentstack Model Generator v0.5.0
 =====================================
 
 OAuth Authentication Required
