@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <PackageId>contentstack.model.generator</PackageId>
-    <Copyright>Copyright © 2012-2024 Contentstack. All Rights Reserved</Copyright>
+    <Copyright>Copyright © 2012-2025 Contentstack. All Rights Reserved</Copyright>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageLicense>https://github.com/contentstack/contentstack-model-generator/blob/master/LICENSE</PackageLicense>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -13,15 +13,15 @@
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.4.6</PackageVersion>
+    <PackageVersion>0.5.0</PackageVersion>
     <Authors>Contentstack</Authors>
-    <ReleaseVersion>0.4.6</ReleaseVersion>
+    <ReleaseVersion>0.5.0</ReleaseVersion>
     <RootNamespace>Contentstack.Model.Generator</RootNamespace>
      <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>Modular block with Global field issue resolved</PackageReleaseNotes>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-  <PackageTags>v0.4.6</PackageTags>
+  <PackageTags>v0.5.0</PackageTags>
   <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
@@ -32,6 +32,12 @@
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>contentstack.model.generator.tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="CMA\" />

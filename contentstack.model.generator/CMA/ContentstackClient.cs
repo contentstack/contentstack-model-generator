@@ -68,11 +68,23 @@ namespace contentstack.CMA
         }
         public ContentstackClient(ContentstackOptions options)
         {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+                
             ContentstackOptions _options = options;
             this.StackApiKey = _options.ApiKey;
             this._LocalHeaders = new Dictionary<string, object>();
             this.SetHeader("api_key", _options.ApiKey);
-            this.SetHeader("authtoken", _options.Authtoken);
+            
+            if (_options.IsOAuth && !string.IsNullOrEmpty(_options.Authorization))
+            {
+                this.SetHeader("Authorization", _options.Authorization);
+            }
+            else
+            {
+                this.SetHeader("authtoken", _options.Authtoken);
+            }
+
             Config cnfig = new Config();
             if (_options.Host != null)
             {
@@ -295,6 +307,7 @@ namespace contentstack.CMA
         {
             Dictionary<string, object> mainHeader = _StackHeaders;
             Dictionary<string, object> classHeaders = new Dictionary<string, object>();
+
 
             if (localHeader != null && localHeader.Count > 0)
             {

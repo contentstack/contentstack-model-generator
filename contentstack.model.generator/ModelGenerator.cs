@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using contentstack.CMA;
+using contentstack.CMA.OAuth;
 using contentstack.model.generator.Model;
 using Contentstack.Model.Generator.Model;
 using McMaster.Extensions.CommandLineUtils;
@@ -24,8 +25,24 @@ namespace contentstack.model.generator
         public string ApiKey { get; set; }
 
         [Option(CommandOptionType.SingleValue, ShortName = "A", LongName = "authtoken", Description = "The Authtoken for the Content Management API")]
-        [Required(ErrorMessage = "You must specify the Contentstack authtoken for the Content Management API")]
         public string Authtoken { get; set; }
+
+        [Option(CommandOptionType.NoValue, LongName = "oauth", Description = "Use OAuth authentication instead of traditional authtoken")]
+        public bool UseOAuth { get; set; }
+
+        [Option(CommandOptionType.SingleValue, ShortName = "", LongName = "app-id", Description = "OAuth App ID (required when using --oauth)")]
+        public string OAuthAppId { get; set; } = "6400aa06db64de001a31c8a9";
+
+        [Option(CommandOptionType.SingleValue, ShortName = "", LongName = "client-id", Description = "OAuth Client ID (required when using --oauth)")]
+        public string OAuthClientId { get; set; } = "Ie0FEfTzlfAHL4xM";
+
+        [Option(CommandOptionType.SingleValue, ShortName = "", LongName = "redirect-uri", Description = "OAuth Redirect URI (required when using --oauth)")]
+        public string OAuthRedirectUri { get; set; } = "http://localhost:8184";
+
+        [Option(CommandOptionType.SingleValue, ShortName = "", LongName = "client-secret", Description = "OAuth Client Secret (optional for public clients)")]
+        public string OAuthClientSecret { get; set; }
+        [Option(CommandOptionType.SingleValue, ShortName = "", LongName = "scopes", Description = "OAuth Scopes (optional, space-separated)")]
+        public string OAuthScopes { get; set; }
 
         [Option(CommandOptionType.SingleValue, ShortName = "b", LongName = "branch", Description = "The branch header in the API request to fetch or manage modules located within specific branches.")]
         public string Branch { get; set; }
@@ -51,7 +68,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.NoValue, ShortName = "N", LongName = "is-nullable", Description = "The features that protect against throwing a System.NullReferenceException can be disruptive when turned on.")]
         public bool IsNullable { get; }
 
-        [VersionOption("0.4.6")]
+        [VersionOption("0.5.0")]
         public bool Version { get; }
 
         private readonly string _templateStart = @"using System;
@@ -71,21 +88,72 @@ using Newtonsoft.Json.Linq;";
 
         public async Task<int> OnExecute(CommandLineApplication app, IConsole console)
         {
+            // Validate authentication parameters
+            if (UseOAuth)
+            {
+                if (string.IsNullOrEmpty(OAuthClientId) || string.IsNullOrEmpty(OAuthRedirectUri))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Error.WriteLine("OAuth mode requires --client-id and --redirect-uri parameters (--client-secret is optional)");
+                    Console.ResetColor();
+                    return Program.ERROR;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(Authtoken))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Error.WriteLine("You must specify the Contentstack authtoken for the Content Management API");
+                    Console.ResetColor();
+                    return Program.ERROR;
+                }
+            }
 
+            // Parse OAuth scopes if provided
+            string[] oauthScopes = null;
+            if (UseOAuth && !string.IsNullOrEmpty(OAuthScopes))
+            {
+                oauthScopes = OAuthScopes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            }
             var options = new ContentstackOptions
             {
                 ApiKey = ApiKey,
                 Authtoken = Authtoken,
                 Host = Host,
-                Branch = Branch
+                Branch = Branch,
+                IsOAuth = UseOAuth,
+                OAuthClientId = OAuthClientId,
+                OAuthClientSecret = OAuthClientSecret,
+                OAuthRedirectUri = OAuthRedirectUri,
+                OAuthAppId = OAuthAppId,
+                OAuthScopes = oauthScopes
             };
+
+            // Handle OAuth flow if enabled
+            if (UseOAuth)
+            {
+                try
+                {
+                    await HandleOAuthFlow(options, console);
+                }
+                catch (Exception e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Error.WriteLine($"OAuth authentication failed: {e.Message}");
+                    Console.ResetColor();
+                    return Program.ERROR;
+                }
+            }
+
             var client = new ContentstackClient(options);
 
             try
             {
                 Console.WriteLine($"Fetching Stack details for API Key {ApiKey}");
-                stack = await client.GetStack();                
-            } catch (Exception e)
+                stack = await client.GetStack();
+            }
+            catch (Exception e)
             {
                 Console.WriteLine(e);
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -117,9 +185,9 @@ using Newtonsoft.Json.Linq;";
 
                 while (totalCount > skip)
                 {
-                   Console.WriteLine($"{skip} Content Types Fetched.");
-                   totalCount = await getContentTypes(client, skip);
-                   skip += 100;
+                    Console.WriteLine($"{skip} Content Types Fetched.");
+                    totalCount = await getContentTypes(client, skip);
+                    skip += 100;
                 }
                 Console.WriteLine($"Total {totalCount} Content Types fetched.");
 
@@ -167,6 +235,25 @@ using Newtonsoft.Json.Linq;";
             Console.ResetColor();
             Console.WriteLine($"Opening {dir.FullName}");
             OpenFolderatPath(dir.FullName);
+
+            // Logout from OAuth if OAuth was used
+            if (UseOAuth)
+            {
+                try
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Logging out from OAuth...");
+                    await OAuthService.LogoutAsync(options);
+                    Console.WriteLine("OAuth logout successful!");
+                }
+                catch (Exception e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"Warning: OAuth logout failed: {e.Message}");
+                    Console.ResetColor();
+                }
+            }
+
             return Program.OK;
         }
 
@@ -203,7 +290,8 @@ using Newtonsoft.Json.Linq;";
                 case "boolean":
                     return "bool";
                 case "json":
-                    if (field.FieldMetadata != null && field.FieldMetadata.IsJsonRTE) {
+                    if (field.FieldMetadata != null && field.FieldMetadata.IsJsonRTE)
+                    {
                         return "Node";
                     }
                     return "dynamic";
@@ -229,13 +317,13 @@ using Newtonsoft.Json.Linq;";
             string dataType = GetDatatype(field, contentTypeName);
             if (field.DataType == "reference" && DateTime.Compare(stack.Settings.version, DateTime.Parse("Apr, 04 2019")) >= 0)
             {
-                return $"List<{ dataType }>";
+                return $"List<{dataType}>";
             }
             if (field.FieldMetadata != null && field.FieldMetadata.RefMultiple)
             {
-                return $"List<{ dataType }>";
+                return $"List<{dataType}>";
             }
-            return (field.IsMultiple ? $"List<{ dataType }>" : dataType);
+            return (field.IsMultiple ? $"List<{dataType}>" : dataType);
         }
 
         private string GetDatatypeForContentType(Field field)
@@ -279,7 +367,7 @@ using Newtonsoft.Json.Linq;";
         {
             if (string.IsNullOrEmpty(s))
                 return s;
-            var value = Regex.Replace(s, @"[\d-]","").Replace("_", " ");
+            var value = Regex.Replace(s, @"[\d-]", "").Replace("_", " ");
             return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value).Replace(" ", "");
         }
         private void OpenFolderatPath(string path)
@@ -294,7 +382,7 @@ using Newtonsoft.Json.Linq;";
 
         private string GetDataTypeForModularBlock(Field field, string contentTypeName)
         {
-            return $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ","");
+            return $"{ModularBlockPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ", "");
         }
 
         private string GetDataTypeForGroup(Field field, string contentTypeName)
@@ -302,7 +390,7 @@ using Newtonsoft.Json.Linq;";
             return $"{GroupPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ", "");
         }
 
-        private void CreateEmbeddedObjectClass(string NameSpace, DirectoryInfo directoryInfo) 
+        private void CreateEmbeddedObjectClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             string ConverterName = "IEmbeddedObjectConverter";
             var file = shouldCreateFile(ConverterName, directoryInfo);
@@ -347,11 +435,13 @@ using Contentstack.Utils.Interfaces;
                         sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string{nullableString()})obj.GetValue(\"_content_type_uid\") == \"{contentType.Uid}\")");
                         sb.AppendLine("                 {");
                         sb.AppendLine($"                    {FormatClassName(contentType.Title)}{nullableString()} {FirstLetterToUpperCase(contentType.Uid)} = obj.ToObject<{FormatClassName(contentType.Title)}>();");
-                        if (IsNullable) {
+                        if (IsNullable)
+                        {
                             sb.AppendLine($"                    if ({FirstLetterToUpperCase(contentType.Uid)} != null) {{");
                         }
                         sb.AppendLine($"                    target.Add({FirstLetterToUpperCase(contentType.Uid)});");
-                        if (IsNullable) {
+                        if (IsNullable)
+                        {
                             sb.AppendLine($"                    }}");
                         }
                         sb.AppendLine("                 }");
@@ -361,11 +451,13 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string{nullableString()})obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
                     sb.AppendLine("                 {");
                     sb.AppendLine($"                    Asset{nullableString()} asset = obj.ToObject<Asset>();");
-                    if (IsNullable) {
+                    if (IsNullable)
+                    {
                         sb.AppendLine($"                    if (asset != null) {{");
                     }
                     sb.AppendLine($"                    target.Add(asset);");
-                    if (IsNullable) {
+                    if (IsNullable)
+                    {
                         sb.AppendLine($"                    }}");
                     }
                     sb.AppendLine("                 }");
@@ -376,12 +468,14 @@ using Contentstack.Utils.Interfaces;
 
                     sb.AppendLine($"         public override void WriteJson(JsonWriter writer, {className}{nullableString()} value, JsonSerializer serializer)");
                     sb.AppendLine("         {");
-                    if (IsNullable) {
+                    if (IsNullable)
+                    {
                         sb.AppendLine($"             if (value != null) {{");
                     }
                     sb.AppendLine("             JToken t = JToken.FromObject(value);");
                     sb.AppendLine("             t.WriteTo(writer);");
-                    if (IsNullable) {
+                    if (IsNullable)
+                    {
                         sb.AppendLine($"             }}");
                     }
                     sb.AppendLine("         }");
@@ -631,7 +725,7 @@ using Contentstack.Utils.Interfaces;
                     var sb = new StringBuilder();
                     // Adding using at start of file
                     AddUsingDirectives(usingDirectiveList, sb);
-                    
+
                     // Creating namespace 
                     AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
 
@@ -647,7 +741,7 @@ using Contentstack.Utils.Interfaces;
 
                     // Add Const
                     sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
-                    sb.AppendLine($"        [JsonProperty(propertyName: \"uid\")]");                    
+                    sb.AppendLine($"        [JsonProperty(propertyName: \"uid\")]");
                     sb.AppendLine($"        public string{nullableString()} Uid {{ get; set; }}");
                     sb.AppendLine($"        [JsonProperty(propertyName: \"_content_type_uid\")]");
                     sb.AppendLine($"        public string{nullableString()} ContentTypeUid {{ get; set; }}");
@@ -793,15 +887,15 @@ using Contentstack.Utils.Interfaces;
 
                     sb.AppendLine($"            get");
                     sb.AppendLine($"            {{");
-                    sb.AppendLine($"                return this.{FirstLetterToUpperCase(field.Uid)}Store.{(field.IsMultiple ? "ToListHtml()" : "ToHtml()" )};");
+                    sb.AppendLine($"                return this.{FirstLetterToUpperCase(field.Uid)}Store.{(field.IsMultiple ? "ToListHtml()" : "ToHtml()")};");
                     sb.AppendLine($"            }}");
 
                     sb.AppendLine($"        }}");
                     sb.AppendLine($"        private {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)}Store = \"\";");
                     continue;
-                    
+
                 }
-                sb.AppendLine($"        public {GetDatatypeForField(field, contentType)}{nullableString()} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}"); 
+                sb.AppendLine($"        public {GetDatatypeForField(field, contentType)}{nullableString()} {FirstLetterToUpperCase(field.Uid)} {{ get; set; }}");
             }
         }
 
@@ -1097,11 +1191,13 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine("             JObject jObject = JObject.Load(reader);");
                     sb.AppendLine($"             {className} target = Create(objectType, jObject);");
                     sb.AppendLine("             var token = jObject.GetValue(ContentstackHelper.GetDescription(target.BlockType));");
-                    if (IsNullable) {
+                    if (IsNullable)
+                    {
                         sb.AppendLine($"             if (token != null) {{");
                     }
                     sb.AppendLine("             serializer.Populate(token.CreateReader(), target);");
-                    if (IsNullable) {
+                    if (IsNullable)
+                    {
                         sb.AppendLine($"             }}");
                     }
                     sb.AppendLine("             return target;");
@@ -1109,12 +1205,14 @@ using Contentstack.Utils.Interfaces;
 
                     sb.AppendLine($"        public override void WriteJson(JsonWriter writer, {className}{nullableString()} value, JsonSerializer serializer)");
                     sb.AppendLine("        {");
-                    if (IsNullable) {
+                    if (IsNullable)
+                    {
                         sb.AppendLine($"             if (value != null) {{");
                     }
                     sb.AppendLine("             JToken t = JToken.FromObject(value);");
                     sb.AppendLine("             t.WriteTo(writer);");
-                    if (IsNullable) {
+                    if (IsNullable)
+                    {
                         sb.AppendLine($"             }}");
                     }
                     sb.AppendLine("        }");
@@ -1126,6 +1224,58 @@ using Contentstack.Utils.Interfaces;
                     sw.WriteLine(sb.ToString());
                 }
             }
+        }
+
+        /// <summary>
+        /// Handles the OAuth authentication flow
+        /// </summary>
+        /// <param name="options">OAuth configuration options</param>
+        /// <param name="console">Console for user interaction</param>
+        private async Task HandleOAuthFlow(ContentstackOptions options, IConsole console)
+        {
+            // Generate PKCE code verifier
+            string codeVerifier = OAuthService.GenerateCodeVerifier();
+
+            // Generate authorization URL
+            string authUrl = OAuthService.GenerateAuthorizationUrl(options, codeVerifier);
+
+            Console.WriteLine("OAuth Authentication Required");
+            Console.WriteLine("=============================");
+            Console.WriteLine();
+            Console.WriteLine("Please open the following URL in your browser to authorize the application:");
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(authUrl);
+            Console.ResetColor();
+            Console.WriteLine();
+            Console.WriteLine("After authorization, you will be redirected to a local URL.");
+            Console.WriteLine("Please copy the 'code' parameter from the redirect URL and paste it here:");
+            Console.WriteLine();
+
+            // Get authorization code from user
+            Console.Write("Authorization code: ");
+            string authorizationCode = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(authorizationCode))
+            {
+                throw new InvalidOperationException("Authorization code is required");
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Exchanging authorization code for access token...");
+
+            // Exchange code for token
+            var tokenResponse = await OAuthService.ExchangeCodeForTokenAsync(options, authorizationCode, codeVerifier);
+
+            // Update options with tokens
+            options.AccessToken = tokenResponse.AccessToken;
+            options.RefreshToken = tokenResponse.RefreshToken;
+            options.TokenExpiresAt = tokenResponse.ExpiresAt;
+            options.Authorization = $"Bearer {tokenResponse.AccessToken}";
+
+            Console.WriteLine("OAuth authentication successful!");
+            Console.WriteLine($"Access token expires at: {tokenResponse.ExpiresAt:yyyy-MM-dd HH:mm:ss} UTC");
+            Console.WriteLine();
         }
     }
 }
