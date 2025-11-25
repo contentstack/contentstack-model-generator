@@ -150,15 +150,15 @@ using Newtonsoft.Json.Linq;";
 
             try
             {
-                Console.WriteLine($"Fetching Stack details for API Key {ApiKey}");
+                Console.WriteLine(Messages.FetchingStackDetails);
                 stack = await client.GetStack();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.Error.WriteLine("There was an error communicating with the Contentstack API: " + e.Message);
-                Console.Error.WriteLine("Please verify that your api key and authtoken are correct");
+                Console.Error.WriteLine(Messages.ApiCommunicationError);
+                Console.Error.WriteLine(Messages.AuthenticationFailed);
                 return Program.ERROR;
             }
 
@@ -166,11 +166,11 @@ using Newtonsoft.Json.Linq;";
             if (string.IsNullOrEmpty(Path))
             {
                 path = Directory.GetCurrentDirectory();
-                Console.WriteLine($"No path specified, creating files in current working directory {path}");
+                Console.WriteLine(Messages.NoPathSpecified(path));
             }
             else
             {
-                Console.WriteLine($"Path specified. Files will be created at {Path}");
+                Console.WriteLine(Messages.OutputPathSpecified(Path));
                 path = Path;
             }
             path = $"{path}/Models";
@@ -178,45 +178,45 @@ using Newtonsoft.Json.Linq;";
 
             try
             {
-                Console.WriteLine($"Fetching Content Types from {stack.Name}");
+                Console.WriteLine(Messages.FetchingContentTypes(stack.Name));
                 var totalCount = await getContentTypes(client, 0);
                 var skip = 100;
-                Console.WriteLine($"Found {totalCount} Content Types .");
+                Console.WriteLine(Messages.FoundContentTypes(totalCount));
 
                 while (totalCount > skip)
                 {
-                    Console.WriteLine($"{skip} Content Types Fetched.");
+                    Console.WriteLine(Messages.FetchedContentTypes(skip));
                     totalCount = await getContentTypes(client, skip);
                     skip += 100;
                 }
-                Console.WriteLine($"Total {totalCount} Content Types fetched.");
+                Console.WriteLine(Messages.TotalContentTypesFetched(totalCount));
 
                 CreateEmbeddedObjectClass(Namespace, dir);
 
-                Console.WriteLine($"Fetching Global Fields from {stack.Name}");
+                Console.WriteLine(Messages.FetchingGlobalFields(stack.Name));
                 totalCount = await getGlobalFields(client, 0);
                 skip = 100;
-                Console.WriteLine($"Found {totalCount} Global Fields.");
+                Console.WriteLine(Messages.FoundGlobalFields(totalCount));
 
                 while (totalCount > skip)
                 {
-                    Console.WriteLine($"{skip} Global Fields Fetched.");
+                    Console.WriteLine(Messages.FetchedGlobalFields(skip));
                     totalCount = await getGlobalFields(client, skip);
                     skip += 100;
                 }
-                Console.WriteLine($"Total {totalCount} Global Fields fetched.");
+                Console.WriteLine(Messages.TotalGlobalFieldsFetched(totalCount));
             }
             catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.Error.WriteLine("There was an error communicating with the Contentstack API: " + e.Message);
-                Console.Error.WriteLine("Please verify that your api key and authtoken are correct");
+                Console.Error.WriteLine(Messages.ApiCommunicationError);
+                Console.Error.WriteLine(Messages.AuthenticationFailed);
                 return Program.ERROR;
             }
             Console.ResetColor();
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"Generating files from content type");
+            Console.WriteLine(Messages.GeneratingFiles);
             Console.ResetColor();
 
             Console.ForegroundColor = ConsoleColor.DarkYellow;
@@ -231,9 +231,9 @@ using Newtonsoft.Json.Linq;";
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"Files successfully created!");
+            Console.WriteLine(Messages.FilesCreatedSuccessfully);
             Console.ResetColor();
-            Console.WriteLine($"Opening {dir.FullName}");
+            Console.WriteLine(Messages.OpeningOutputDirectory(dir.FullName));
             OpenFolderatPath(dir.FullName);
 
             // Logout from OAuth if OAuth was used
@@ -306,7 +306,7 @@ using Newtonsoft.Json.Linq;";
                 case "group":
                     return GetDataTypeForGroup(field, contentTypeName);
                 default:
-                    Console.WriteLine(field.DataType);
+                    Console.WriteLine(Messages.FieldDataType(field.DataType));
                     break;
             }
             return "object";
@@ -625,7 +625,7 @@ using Contentstack.Utils.Interfaces;
         private void CreateModularFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo, string extendsClass = null)
         {
 
-            Console.WriteLine($"Extracting Modular Blocks in {contentTypeName}.");
+            Console.WriteLine(Messages.ExtractingModularBlocksInContentType(contentTypeName));
 
             // Get modular Block within ContentType
             var usingDirectiveList = new List<string>();
@@ -635,7 +635,7 @@ using Contentstack.Utils.Interfaces;
                 usingDirectiveList.Add(modularUsingDirective);
             }
 
-            Console.WriteLine($"Extracting Groups in {contentTypeName}.");
+            Console.WriteLine(Messages.ExtractingGroupsInContentType(contentTypeName));
 
             string groupUsingDirective = CreateGroup(nameSpace, contentTypeName, contentType.Schema, directoryInfo);
             usingDirectiveList.Add(groupUsingDirective);
@@ -699,7 +699,7 @@ using Contentstack.Utils.Interfaces;
         private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo)
         {
 
-            Console.WriteLine($"Extracting Modular Blocks in {contentTypeName}.");
+            Console.WriteLine(Messages.ExtractingModularBlocksInContentType(contentTypeName));
 
             var fields = findRTEReference(contentType.Schema);
 
@@ -711,7 +711,7 @@ using Contentstack.Utils.Interfaces;
                 usingDirectiveList.Add(modularUsingDirective);
             }
 
-            Console.WriteLine($"Extracting Groups in {contentTypeName}.");
+            Console.WriteLine(Messages.ExtractingGroupsInContentType(contentTypeName));
 
             string groupUsingDirective = CreateGroup(nameSpace, contentTypeName, contentType.Schema, directoryInfo);
             usingDirectiveList.Add(groupUsingDirective);
@@ -775,12 +775,12 @@ using Contentstack.Utils.Interfaces;
                 if (!prompt)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Skipping {file.Name}");
+                    Console.WriteLine(Messages.SkippingFile(file.Name));
                     Console.ResetColor();
                     return null;
                 }
             }
-            Console.WriteLine($"Adding File {fileName} to {directoryInfo.FullName}.");
+            Console.WriteLine(Messages.AddingFile(fileName, directoryInfo.FullName));
             return file;
         }
 
@@ -789,7 +789,7 @@ using Contentstack.Utils.Interfaces;
             var dir = new DirectoryInfo(path);
             if (!dir.Exists)
             {
-                Console.WriteLine($"Path {path} does not exist and will be created.");
+                Console.WriteLine(Messages.OutputPathNotFound(path));
                 dir.Create();
             }
             return dir;
@@ -947,7 +947,7 @@ using Contentstack.Utils.Interfaces;
 
         private void CreateGroupClass(string groupName, string nameSpace, Field field, DirectoryInfo directoryInfo)
         {
-            Console.WriteLine($"Extracting Modular Blocks in {groupName}.");
+            Console.WriteLine(Messages.ExtractingModularBlocksInGroup(groupName));
 
             // Get modular Block within Group
             var usingDirectiveList = new List<string>();
@@ -957,7 +957,7 @@ using Contentstack.Utils.Interfaces;
                 usingDirectiveList.Add(modularUsingDirective);
             }
 
-            Console.WriteLine($"Extracting Groups in {groupName}.");
+            Console.WriteLine(Messages.ExtractingGroupsInGroup(groupName));
             // Get Group within Group
             string grpupUsingDirective = CreateGroup(nameSpace, groupName, field.Schema, directoryInfo);
             usingDirectiveList.Add(grpupUsingDirective);
