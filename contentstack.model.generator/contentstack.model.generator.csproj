@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <PackageId>contentstack.model.generator</PackageId>
-    <Copyright>Copyright © 2012-2025 Contentstack. All Rights Reserved</Copyright>
+    <Copyright>Copyright © 2012-2026 Contentstack. All Rights Reserved</Copyright>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageLicense>https://github.com/contentstack/contentstack-model-generator/blob/master/LICENSE</PackageLicense>
     <PackageReadmeFile>README.md</PackageReadmeFile>
