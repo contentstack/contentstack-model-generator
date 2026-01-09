@@ -68,7 +68,7 @@ namespace contentstack.model.generator
         [Option(CommandOptionType.NoValue, ShortName = "N", LongName = "is-nullable", Description = "The features that protect against throwing a System.NullReferenceException can be disruptive when turned on.")]
         public bool IsNullable { get; }
 
-        [VersionOption("0.5.0")]
+        [VersionOption("0.5.1")]
         public bool Version { get; }
 
         private readonly string _templateStart = @"using System;

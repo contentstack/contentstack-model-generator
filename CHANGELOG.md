@@ -1,3 +1,8 @@
+### Version: 0.5.1
+#### Date: Jan-12-2026
+
+- Improved Error messages 
+
 ### Version: 0.5.0
 #### Date: Oct-05-2025
 
