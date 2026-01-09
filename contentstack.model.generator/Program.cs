@@ -23,7 +23,8 @@ namespace contentstack.model.generator
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.Error.WriteLine("Unexpected error: " + ex.ToString());
+                Console.Error.WriteLine(Messages.UnexpectedError);
+                Console.Error.WriteLine(ex.ToString());
                 Console.ResetColor();
                 return EXCEPTION;
             }
