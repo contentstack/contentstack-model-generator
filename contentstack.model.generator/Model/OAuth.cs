@@ -157,7 +157,7 @@ namespace Contentstack.Model.Generator.Model
         {
             if (!IsValid(out var errorMessage))
             {
-                throw new Exceptions.OAuthConfigurationException(errorMessage);
+                throw new OAuthConfigurationException(errorMessage);
             }
         }
 
@@ -245,4 +245,13 @@ namespace Contentstack.Model.Generator.Model
         public bool IsValid => !string.IsNullOrEmpty(AccessToken) && !IsExpired;
     }
 
+    /// <summary>
+    /// Thrown when OAuth configuration validation fails in <see cref="OAuthOptions.Validate"/>.
+    /// </summary>
+    public class OAuthConfigurationException : Exception
+    {
+        public OAuthConfigurationException(string message) : base(message)
+        {
+        }
+    }
 }
