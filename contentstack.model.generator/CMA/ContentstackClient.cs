@@ -303,7 +303,7 @@ namespace contentstack.CMA
             }
         }
        
-        private Dictionary<string, object> GetHeader(Dictionary<string, object> localHeader)
+        internal Dictionary<string, object> GetHeader(Dictionary<string, object> localHeader)
         {
             Dictionary<string, object> mainHeader = _StackHeaders;
             Dictionary<string, object> classHeaders = new Dictionary<string, object>();

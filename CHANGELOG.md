@@ -1,3 +1,11 @@
+### Version: 1.0.0-beta.1
+#### Date: Jun-30-2026
+
+- Upgraded target framework from net7.0 to net10.0
+- Updated CI/CD pipeline to use .NET 10 SDK (actions/setup-dotnet@v4)
+- Updated Microsoft.AspNetCore.Mvc.Testing from 9.0.9 to 10.0.0
+- Fixed GetHeader method visibility (private → internal) to allow test access
+
 ### Version: 0.5.1
 #### Date: Jan-12-2026
 
