@@ -1,5 +1,5 @@
 ### Version: 1.0.0-beta.1
-#### Date: Jun-30-2026
+#### Date: 
 
 - Upgraded target framework from net7.0 to net10.0
 - Updated CI/CD pipeline to use .NET 10 SDK (actions/setup-dotnet@v4)
