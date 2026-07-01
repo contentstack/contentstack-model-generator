@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <PackageId>contentstack.model.generator</PackageId>
     <Copyright>Copyright © 2012-2026 Contentstack. All Rights Reserved</Copyright>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -13,9 +13,9 @@
     <PackAsTool>true</PackAsTool>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>0.5.1</PackageVersion>
+    <PackageVersion>1.0.0-beta.1</PackageVersion>
     <Authors>Contentstack</Authors>
-    <ReleaseVersion>0.5.1</ReleaseVersion>
+    <ReleaseVersion>1.0.0-beta.1</ReleaseVersion>
     <RootNamespace>Contentstack.Model.Generator</RootNamespace>
      <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReleaseNotes>Improved Error messages</PackageReleaseNotes>
