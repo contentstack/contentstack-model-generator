@@ -1,14 +1,14 @@
 ﻿using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Contentstack.Model.Generator.Model
 {
     public class StackResponse
     {
-        [JsonProperty(PropertyName = "api_key")]
+        [JsonPropertyName("api_key")]
         public string APIKey { get; set; }
         public string Name { get; set; }
-        [JsonProperty(PropertyName = "master_locale")]
+        [JsonPropertyName("master_locale")]
         public string MasterLocale { get; set; }
         public string Uid { get; set; }
         public string Description { get; set; }
