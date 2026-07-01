@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace contentstack.CMA.OAuth
 {
@@ -408,25 +409,25 @@ namespace contentstack.CMA.OAuth
 
     public class OAuthTokenResponse
     {
-        [JsonProperty("access_token")]
+        [JsonPropertyName("access_token")]
         public string AccessToken { get; set; }
 
-        [JsonProperty("refresh_token")]
+        [JsonPropertyName("refresh_token")]
         public string RefreshToken { get; set; }
 
-        [JsonProperty("token_type")]
+        [JsonPropertyName("token_type")]
         public string TokenType { get; set; }
 
-        [JsonProperty("expires_in")]
+        [JsonPropertyName("expires_in")]
         public int ExpiresIn { get; set; }
 
-        [JsonProperty("scope")]
+        [JsonPropertyName("scope")]
         public string Scope { get; set; }
 
-        [JsonProperty("organization_uid")]
+        [JsonPropertyName("organization_uid")]
         public string OrganizationUid { get; set; }
 
-        [JsonProperty("user_uid")]
+        [JsonPropertyName("user_uid")]
         public string UserUid { get; set; }
 
         // Computed property for expiration time

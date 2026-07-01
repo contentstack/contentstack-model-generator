@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace contentstack.model.generator.Model
 {
@@ -11,7 +11,7 @@ namespace contentstack.model.generator.Model
 
         public List<Field> Schema { get; set; }
 
-        [JsonProperty(propertyName: "reference_to")]
+        [JsonPropertyName("reference_to")]
         public string ReferenceTo { get; set; }
     }
 }
