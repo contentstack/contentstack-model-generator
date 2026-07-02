@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 using System.Collections.Generic;
 using System.Net;
 using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace contentstack.CMA.Http
 {
@@ -15,7 +15,7 @@ namespace contentstack.CMA.Http
         private bool _disposed = false;
         private readonly HttpClient _httpClient;
         private readonly HttpRequestMessage _request;
-        private readonly JsonSerializer _serializer;
+        private readonly JsonSerializerOptions _options;
         #endregion
 
         #region Public
@@ -52,10 +52,10 @@ namespace contentstack.CMA.Http
         #endregion
 
         #region Constructor
-        internal ContentstackHttpRequest(HttpClient httpClient, JsonSerializer serializer)
+        internal ContentstackHttpRequest(HttpClient httpClient, JsonSerializerOptions options)
         {
             _httpClient = httpClient;
-            _serializer = serializer;
+            _options = options;
             _request = new HttpRequestMessage();
         }
         #endregion
@@ -124,14 +124,14 @@ namespace contentstack.CMA.Http
 
                 if (responseMessage.StatusCode >= HttpStatusCode.Ambiguous &&
                     responseMessage.StatusCode < HttpStatusCode.BadRequest)
-                    return new ContentstackResponse(responseMessage, _serializer);
+                    return new ContentstackResponse(responseMessage, _options);
 
                 if (!responseMessage.IsSuccessStatusCode)
                 {
                     throw new HttpRequestException($"HTTP request failed with status code: {responseMessage.StatusCode}");
                 }
 
-                return new ContentstackResponse(responseMessage, _serializer);
+                return new ContentstackResponse(responseMessage, _options);
             }
             catch (HttpRequestException httpException)
             {
