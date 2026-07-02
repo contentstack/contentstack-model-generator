@@ -1,6 +1,6 @@
 using System;
 using System.Net;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace contentstack.CMA.Http
 {
@@ -19,7 +19,7 @@ namespace contentstack.CMA.Http
 
         string OpenResponse();
 
-        JObject OpenJObjectResponse();
+        JsonObject OpenJsonObjectResponse();
 
         TResponse OpenTResponse<TResponse>();
     }

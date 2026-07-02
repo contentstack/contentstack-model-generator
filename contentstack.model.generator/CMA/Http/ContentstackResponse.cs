@@ -4,8 +4,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace contentstack.CMA.Http
 {
@@ -20,7 +20,7 @@ namespace contentstack.CMA.Http
         Dictionary<string, string> _headers;
         HashSet<string> _headerNamesSet;
         private readonly HttpResponseMessage _response;
-        private readonly JsonSerializer _serializer;
+        private readonly JsonSerializerOptions _options;
 
         #region Public
         /// <summary>
@@ -126,10 +126,10 @@ namespace contentstack.CMA.Http
         }
         #endregion
 
-        internal ContentstackResponse(HttpResponseMessage response, JsonSerializer serializer)
+        internal ContentstackResponse(HttpResponseMessage response, JsonSerializerOptions options)
         {
             _response = response;
-            _serializer = serializer;
+            _options = options;
 
             this.StatusCode = response.StatusCode;
             this.IsSuccessStatusCode = response.IsSuccessStatusCode;
@@ -146,11 +146,11 @@ namespace contentstack.CMA.Http
         /// <summary>
         /// Json Object format response.
         /// </summary>
-        /// <returns>The JObject.</returns>
-        public JObject OpenJObjectResponse()
+        /// <returns>The JsonObject.</returns>
+        public JsonObject OpenJsonObjectResponse()
         {
             ThrowIfDisposed();
-            return JObject.Parse(OpenResponse());
+            return JsonNode.Parse(OpenResponse())!.AsObject();
         }
 
         /// <summary>
@@ -171,8 +171,8 @@ namespace contentstack.CMA.Http
         public TResponse OpenTResponse<TResponse>()
         {
             ThrowIfDisposed();
-            JObject jObject = OpenJObjectResponse();
-            return jObject.ToObject<TResponse>(_serializer);
+            JsonObject jObject = OpenJsonObjectResponse();
+            return JsonSerializer.Deserialize<TResponse>(jObject.ToJsonString(), _options)!;
         }
 
 
