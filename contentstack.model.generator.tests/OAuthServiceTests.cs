@@ -5,7 +5,6 @@ using Moq;
 using contentstack.CMA;
 using contentstack.CMA.OAuth;
 using System.Net.Http;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace contentstack.model.generator.tests

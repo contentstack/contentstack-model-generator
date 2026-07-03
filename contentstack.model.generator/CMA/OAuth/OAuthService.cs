@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace contentstack.CMA.OAuth
@@ -171,14 +171,15 @@ namespace contentstack.CMA.OAuth
                 
                 // Parse response
                 string responseContent = await response.Content.ReadAsStringAsync();
-                var tokenResponse = JsonConvert.DeserializeObject<OAuthTokenResponse>(responseContent);
-                
+                var serializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var tokenResponse = JsonSerializer.Deserialize<OAuthTokenResponse>(responseContent, serializerOptions);
+
                 // Set expiration time if not already set
                 if (tokenResponse.ExpiresAt == default(DateTime) && tokenResponse.ExpiresIn > 0)
                 {
                     tokenResponse.ExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn);
                 }
-                
+
                 return tokenResponse;
             }
         }
@@ -231,8 +232,9 @@ namespace contentstack.CMA.OAuth
                 
                 // Parse response
                 string responseContent = await response.Content.ReadAsStringAsync();
-                var tokenResponse = JsonConvert.DeserializeObject<OAuthTokenResponse>(responseContent);
-                
+                var serializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var tokenResponse = JsonSerializer.Deserialize<OAuthTokenResponse>(responseContent, serializerOptions);
+
                 // Set expiration time if not already set
                 if (tokenResponse.ExpiresAt == default(DateTime) && tokenResponse.ExpiresIn > 0)
                 {
