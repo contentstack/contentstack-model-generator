@@ -59,20 +59,20 @@ namespace contentstack.model.generator.tests
         }
 
         [Fact]
-        public void Constructor_ShouldSetSerializerSettings()
+        public void Constructor_ShouldSetSerializerOptions()
         {
-            
+
             var options = new ContentstackOptions
             {
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
 
-            
+
             var client = new ContentstackClient(options);
 
-            
-            Assert.NotNull(client.SerializerSettings);
+
+            Assert.NotNull(client.SerializerOptions);
         }
 
         [Theory]
