@@ -1084,7 +1084,7 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine("        }");
 
 
-                    sb.AppendLine("        public static bool FieldExists(string fieldName, JObject jObject)");
+                    sb.AppendLine("        public static bool FieldExists(string fieldName, JsonObject jObject)");
                     sb.AppendLine("        {");
                     sb.AppendLine("            return jObject[fieldName] != null;");
                     sb.AppendLine("        }");
@@ -1158,19 +1158,18 @@ using Contentstack.Utils.Interfaces;
                     var sb = new StringBuilder();
 
                     sb.AppendLine("using System;");
-                    sb.AppendLine("using Newtonsoft.Json;");
-                    sb.AppendLine("using System.Reflection;");
-                    sb.AppendLine("using Newtonsoft.Json.Linq;");
-                    sb.AppendLine("using System.ComponentModel;");
+                    sb.AppendLine("using System.Text.Json;");
+                    sb.AppendLine("using System.Text.Json.Nodes;");
+                    sb.AppendLine("using System.Text.Json.Serialization;");
                     sb.AppendLine("using Contentstack.Core;");
-                    // Creating namespace 
+                    // Creating namespace
                     AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
                     // Creating Enum
                     var ConverterName = $"{className}Converter";
                     sb.AppendLine($"    [CSJsonConverter(\"{ConverterName}\")]");
                     AddClass($"{ConverterName} : JsonConverter<{className}>", sb);
 
-                    sb.AppendLine($"        protected {className} Create(Type objectType, JObject jObject)");
+                    sb.AppendLine($"        protected {className} Create(Type objectType, JsonObject jObject)");
                     sb.AppendLine("        {");
                     foreach (var blocks in blockTypes)
                     {
@@ -1186,35 +1185,30 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine($"        return new {className}();");
                     sb.AppendLine("        }");
 
-                    sb.AppendLine($"        public override {className}{nullableString()} ReadJson(JsonReader reader, Type objectType, {className}{nullableString()} existingValue, bool hasExistingValue, JsonSerializer serializer)");
+                    sb.AppendLine($"        public override {className}{nullableString()} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)");
                     sb.AppendLine("        {");
-                    sb.AppendLine("             JObject jObject = JObject.Load(reader);");
-                    sb.AppendLine($"             {className} target = Create(objectType, jObject);");
-                    sb.AppendLine("             var token = jObject.GetValue(ContentstackHelper.GetDescription(target.BlockType));");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             if (token != null) {{");
-                    }
-                    sb.AppendLine("             serializer.Populate(token.CreateReader(), target);");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             }}");
-                    }
+                    sb.AppendLine("             using var doc = JsonDocument.ParseValue(ref reader);");
+                    sb.AppendLine("             var jObject = JsonNode.Parse(doc.RootElement.GetRawText())!.AsObject();");
+                    sb.AppendLine($"             {className} target = Create(typeToConvert, jObject);");
+                    sb.AppendLine("             var token = jObject[ContentstackHelper.GetDescription(target.BlockType)];");
+                    sb.AppendLine("             if (token != null)");
+                    sb.AppendLine("             {");
+                    sb.AppendLine($"                 var filled = JsonSerializer.Deserialize(token.ToJsonString(), target.GetType(), new JsonSerializerOptions {{ PropertyNameCaseInsensitive = true }}) as {className};");
+                    sb.AppendLine("                 if (filled != null)");
+                    sb.AppendLine("                 {");
+                    sb.AppendLine("                     filled.BlockType = target.BlockType;");
+                    sb.AppendLine("                     return filled;");
+                    sb.AppendLine("                 }");
+                    sb.AppendLine("             }");
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
 
-                    sb.AppendLine($"        public override void WriteJson(JsonWriter writer, {className}{nullableString()} value, JsonSerializer serializer)");
+                    sb.AppendLine($"        public override void Write(Utf8JsonWriter writer, {className}{nullableString()} value, JsonSerializerOptions options)");
                     sb.AppendLine("        {");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             if (value != null) {{");
-                    }
-                    sb.AppendLine("             JToken t = JToken.FromObject(value);");
-                    sb.AppendLine("             t.WriteTo(writer);");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             }}");
-                    }
+                    sb.AppendLine("             if (value != null)");
+                    sb.AppendLine("             {");
+                    sb.AppendLine("                 JsonSerializer.Serialize(writer, value, options);");
+                    sb.AppendLine("             }");
                     sb.AppendLine("        }");
 
                     // End of namespace and Enum
