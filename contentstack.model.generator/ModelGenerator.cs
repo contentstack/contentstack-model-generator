@@ -79,9 +79,9 @@ using System.Threading.Tasks;
 using Contentstack.Core.Models;
 using Contentstack.Utils.Models;
 using Contentstack.Utils.Interfaces;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;";
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;";
 
         private readonly List<Contenttype> _contentTypes = new List<Contenttype>();
         StackResponse stack;
@@ -550,9 +550,9 @@ using Contentstack.Utils.Interfaces;
 
                     // Creating Class
                     AddClass(contentstackLinkClass, sb);
-                    sb.AppendLine($"         [JsonProperty(propertyName: \"title\")]");
+                    sb.AppendLine($"         [JsonPropertyName(\"title\")]");
                     sb.AppendLine($"         public string{nullableString()} Title {{ get; set; }}");
-                    sb.AppendLine($"         [JsonProperty(propertyName: \"href\")]");
+                    sb.AppendLine($"         [JsonPropertyName(\"href\")]");
                     sb.AppendLine($"         public string{nullableString()} Href {{ get; set; }}");
 
                     // End of namespace and class
@@ -741,9 +741,9 @@ using Contentstack.Utils.Interfaces;
 
                     // Add Const
                     sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
-                    sb.AppendLine($"        [JsonProperty(propertyName: \"uid\")]");
+                    sb.AppendLine($"        [JsonPropertyName(\"uid\")]");
                     sb.AppendLine($"        public string{nullableString()} Uid {{ get; set; }}");
-                    sb.AppendLine($"        [JsonProperty(propertyName: \"_content_type_uid\")]");
+                    sb.AppendLine($"        [JsonPropertyName(\"_content_type_uid\")]");
                     sb.AppendLine($"        public string{nullableString()} ContentTypeUid {{ get; set; }}");
 
                     //Adding Params to contentType
@@ -751,7 +751,7 @@ using Contentstack.Utils.Interfaces;
 
                     if (fields)
                     {
-                        sb.AppendLine($"        [JsonProperty(propertyName: \"_embedded_items\")]");
+                        sb.AppendLine($"        [JsonPropertyName(\"_embedded_items\")]");
                         sb.AppendLine("        public Dictionary<string, List<IEmbeddedObject>>{nullableString()} embeddedItems { get; set; }");
                     }
 
@@ -875,7 +875,7 @@ using Contentstack.Utils.Interfaces;
         {
             foreach (var field in schema)
             {
-                sb.AppendLine($"        [JsonProperty(propertyName: \"{field.Uid}\")]");
+                sb.AppendLine($"        [JsonPropertyName(\"{field.Uid}\")]");
                 if (field.DataType == "text" && field.FieldMetadata.IsMarkdown)
                 {
                     sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{");
