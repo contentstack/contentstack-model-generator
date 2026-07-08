@@ -97,8 +97,8 @@ namespace contentstack.CMA
                     var errorContent = await response.Content.ReadAsStringAsync();
                     throw new HttpRequestException($"HTTP request failed with status code: {response.StatusCode} - {errorContent}");
                 }
-            } 
-            catch (Exception ex)
+            }
+            catch (Exception)
             {
                 throw;
             }

@@ -78,9 +78,23 @@ namespace contentstack.model.generator.tests
         [Fact]
         public void OAuthClientSecret_ShouldBeOptional()
         {
-           
+
             var modelGenerator = new ModelGenerator();
             Assert.Null(modelGenerator.OAuthClientSecret);
+        }
+
+        [Fact]
+        public void Path_DefaultValue_IsNull()
+        {
+            var modelGenerator = new ModelGenerator();
+            Assert.Null(modelGenerator.Path);
+        }
+
+        [Fact]
+        public void Version_DefaultValue_IsFalse()
+        {
+            var modelGenerator = new ModelGenerator();
+            Assert.False(modelGenerator.Version);
         }
 
         #endregion

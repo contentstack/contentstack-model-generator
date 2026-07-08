@@ -65,7 +65,7 @@ namespace contentstack.model.generator
         public string Path { get; }
 
         [Option(CommandOptionType.NoValue, ShortName = "N", LongName = "is-nullable", Description = "The features that protect against throwing a System.NullReferenceException can be disruptive when turned on.")]
-        public bool IsNullable { get; }
+        public bool IsNullable { get; internal set; }
 
         [VersionOption("0.5.1")]
         public bool Version { get; }
@@ -82,8 +82,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;";
 
-        private readonly List<Contenttype> _contentTypes = new List<Contenttype>();
-        StackResponse stack;
+        internal readonly List<Contenttype> _contentTypes = new List<Contenttype>();
+        internal StackResponse stack;
 
         public async Task<int> OnExecute(CommandLineApplication app, IConsole console)
         {
@@ -205,7 +205,7 @@ using System.Text.Json.Serialization;";
                 }
                 Console.WriteLine(Messages.TotalGlobalFieldsFetched(totalCount));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine(Messages.ApiCommunicationError);
@@ -311,7 +311,7 @@ using System.Text.Json.Serialization;";
             return "object";
         }
 
-        private string GetDatatypeForField(Field field, string contentTypeName)
+        internal string GetDatatypeForField(Field field, string contentTypeName)
         {
             string dataType = GetDatatype(field, contentTypeName);
             if (field.DataType == "reference" && DateTime.Compare(stack.Settings.version, DateTime.Parse("Apr, 04 2019")) >= 0)
@@ -391,7 +391,7 @@ using System.Text.Json.Serialization;";
             return $"{GroupPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ", "");
         }
 
-        private void CreateEmbeddedObjectClass(string NameSpace, DirectoryInfo directoryInfo)
+        internal void CreateEmbeddedObjectClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             string ConverterName = "IEmbeddedObjectConverter";
             var file = shouldCreateFile(ConverterName, directoryInfo);
@@ -464,7 +464,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private void CreateDisplayAttributeClass(string NameSpace, DirectoryInfo directoryInfo)
+        internal void CreateDisplayAttributeClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             // Create File for DisplayAttribute
             string contentstackLinkClass = "DisplayNameAttribute";
@@ -506,7 +506,7 @@ using Contentstack.Utils.Interfaces;
                 }
             }
         }
-        private void CreateLinkClass(string NameSpace, DirectoryInfo directoryInfo)
+        internal void CreateLinkClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             // Create File for LinkClass
             string contentstackLinkClass = "ContentstackLink";
@@ -642,7 +642,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private Boolean findRTEReference(List<Field> Schema)
+        internal Boolean findRTEReference(List<Field> Schema)
         {
             if (Schema == null)
             {
@@ -670,7 +670,7 @@ using Contentstack.Utils.Interfaces;
             return fields.Count > 0;
         }
 
-        private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo)
+        internal void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo)
         {
 
             Console.WriteLine(Messages.ExtractingModularBlocksInContentType(contentTypeName));
@@ -726,7 +726,7 @@ using Contentstack.Utils.Interfaces;
                     if (fields)
                     {
                         sb.AppendLine($"        [JsonPropertyName(\"_embedded_items\")]");
-                        sb.AppendLine("        public Dictionary<string, List<IEmbeddedObject>>{nullableString()} embeddedItems { get; set; }");
+                        sb.AppendLine($"        public Dictionary<string, List<IEmbeddedObject>>{nullableString()} embeddedItems {{ get; set; }}");
                     }
 
                     // End of namespace and class
@@ -845,7 +845,7 @@ using Contentstack.Utils.Interfaces;
             return new Tuple<string, string, DirectoryInfo, List<Field>>(usingDirective, NameSpace, directory, fields);
         }
 
-        private void AddParams(string contentType, List<Field> schema, in StringBuilder sb)
+        internal void AddParams(string contentType, List<Field> schema, in StringBuilder sb)
         {
             foreach (var field in schema)
             {
@@ -1025,7 +1025,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private void CreateHelperClass(string nameSpace, DirectoryInfo directoryInfo)
+        internal void CreateHelperClass(string nameSpace, DirectoryInfo directoryInfo)
         {
             string className = "ContentstackHelper";
             FileInfo file = shouldCreateFile(className, directoryInfo);
@@ -1071,7 +1071,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private void CreateStringHelperClass(string nameSpace, DirectoryInfo directoryInfo)
+        internal void CreateStringHelperClass(string nameSpace, DirectoryInfo directoryInfo)
         {
             string className = "ContentstackStringExtension";
             FileInfo file = shouldCreateFile(className, directoryInfo);
@@ -1121,7 +1121,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private void CreateModularBlockConverter(string nameSpace, string className, Dictionary<string, string> blockTypes, DirectoryInfo directoryInfo)
+        internal void CreateModularBlockConverter(string nameSpace, string className, Dictionary<string, string> blockTypes, DirectoryInfo directoryInfo)
         {
             FileInfo file = shouldCreateFile($"{className}Converter", directoryInfo);
 

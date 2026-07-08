@@ -25,3 +25,6 @@ packages/
 .vscode
 .dccache
 .sonarqube/
+*/TestResults/
+TestResults/
+test-report_*.html

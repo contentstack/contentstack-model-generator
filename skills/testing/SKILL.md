@@ -35,6 +35,20 @@ With coverage (example using coverlet collector — adjust flags to match your l
 dotnet test contentstack.model.generator/contentstack.model.generator.sln --collect:"XPlat Code Coverage"
 ```
 
+### HTML test + coverage report
+
+`Scripts/generate_test_report.py` (stdlib-only, no extra Python packages) turns a `.trx` run plus its Cobertura coverage file into a single self-contained HTML report (pass/fail summary, per-class breakdown with failure details, and a code coverage table). Mirrors the pattern used in the `contentstack-dotnet` sibling repo's `Scripts/generate_enhanced_html_report.py`.
+
+```bash
+dotnet test contentstack.model.generator.tests/contentstack.model.generator.tests.csproj \
+    --logger "trx;LogFileName=test-results.trx" \
+    --collect:"XPlat Code Coverage" \
+    --results-directory contentstack.model.generator.tests/TestResults
+
+python3 Scripts/generate_test_report.py
+```
+Run with no arguments, it auto-discovers the newest `.trx` and `coverage.cobertura.xml` under `contentstack.model.generator.tests/TestResults/`. Pass explicit paths (`python3 Scripts/generate_test_report.py <trx> <coverage.xml>`) to target a specific run. Output is `test-report_<timestamp>.html` at the repo root — gitignored, local artifact only.
+
 Run a **single test** or class (examples):
 
 ```bash
@@ -117,7 +131,13 @@ Leave a blank line between phases if it helps readability (many tests in this re
 | [OAuthErrorHandlingTests.cs](../../contentstack.model.generator.tests/OAuthErrorHandlingTests.cs) | OAuth error paths. |
 | [OAuthIntegrationTests.cs](../../contentstack.model.generator.tests/OAuthIntegrationTests.cs) | Broader OAuth integration scenarios. |
 | [ModelGeneratorOAuthTests.cs](../../contentstack.model.generator.tests/ModelGeneratorOAuthTests.cs) | CLI / `ModelGenerator` + OAuth interactions. |
-| [ModelGeneratorTests.cs](../../contentstack.model.generator.tests/ModelGeneratorTests.cs) | Codegen / `ModelGenerator` behavior. |
+| [ModelGeneratorTests.cs](../../contentstack.model.generator.tests/ModelGeneratorTests.cs) | CLI option metadata / `ModelGenerator` property behavior. |
+| [ModelGeneratorTestHelpers.cs](../../contentstack.model.generator.tests/ModelGeneratorTestHelpers.cs) | Not a test class - shared `Field`/`MetaData`/`Contenttype` fixture builders and `CreateGenerator(...)` factory for the codegen test files below. |
+| [ModelGeneratorFieldTypeResolutionTests.cs](../../contentstack.model.generator.tests/ModelGeneratorFieldTypeResolutionTests.cs) | `GetDatatypeForField` - field-type → C# type mapping, reference/global_field resolution, multiplicity wrapping. |
+| [ModelGeneratorAddParamsTests.cs](../../contentstack.model.generator.tests/ModelGeneratorAddParamsTests.cs) | `AddParams` - attribute + property emission per field type, markdown special case. |
+| [ModelGeneratorNullableVariantTests.cs](../../contentstack.model.generator.tests/ModelGeneratorNullableVariantTests.cs) | `IsNullable` (`--is-nullable`/`-N`) toggle across `AddParams`/`CreateLinkClass`/`CreateFile`/`CreateModularBlockConverter`, plus the `CreateEmbeddedObjectClass` no-suffix asymmetry. |
+| [ModelGeneratorCreateFileTests.cs](../../contentstack.model.generator.tests/ModelGeneratorCreateFileTests.cs) | `CreateFile` end-to-end - class shape, nested blocks/group generation, using directives, embedded-items interpolation regression. |
+| [ModelGeneratorSupportingClassGenerationTests.cs](../../contentstack.model.generator.tests/ModelGeneratorSupportingClassGenerationTests.cs) | `CreateLinkClass`, `CreateEmbeddedObjectClass`, `CreateModularBlockConverter` called directly. |
 
 ### Credentials and secrets
 

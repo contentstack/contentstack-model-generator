@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 namespace contentstack.CMA
@@ -87,16 +86,8 @@ namespace contentstack.CMA
             this.ErrorMessage = exception.Message;
         }
 
-        protected ContentstackException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-
         public ContentstackException(string message, Exception innerException) : base(message, innerException)
         {
-        }
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            base.GetObjectData(info, context);
         }
         #endregion
 
