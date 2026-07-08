@@ -12,8 +12,7 @@ using contentstack.CMA.OAuth;
 using contentstack.model.generator.Model;
 using Contentstack.Model.Generator.Model;
 using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace contentstack.model.generator
 {
@@ -328,25 +327,27 @@ using System.Text.Json.Serialization;";
 
         private string GetDatatypeForContentType(Field field)
         {
-            if (!field.FieldMetadata.RefMultipleContentType && !field.ReferenceTo.GetType().IsArray)
+            if (field.ReferenceTo is JsonElement element)
             {
-                string referenceTo = (string)(field.ReferenceTo);
-                Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
-                if (contentType != null)
+                if (!field.FieldMetadata.RefMultipleContentType && element.ValueKind == JsonValueKind.String)
                 {
-                    return FormatClassName(contentType.Title);
-                }
-            }
-            else if (field.ReferenceTo.GetType() == typeof(JArray))
-            {
-                JArray array = field.ReferenceTo as JArray;
-                if (array.Count == 1)
-                {
-                    string referenceTo = (string)(array.First);
+                    string referenceTo = element.GetString();
                     Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
                     if (contentType != null)
                     {
                         return FormatClassName(contentType.Title);
+                    }
+                }
+                else if (element.ValueKind == JsonValueKind.Array)
+                {
+                    if (element.GetArrayLength() == 1)
+                    {
+                        string referenceTo = element[0].GetString();
+                        Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
+                        if (contentType != null)
+                        {
+                            return FormatClassName(contentType.Title);
+                        }
                     }
                 }
             }
@@ -401,84 +402,57 @@ using System.Text.Json.Serialization;";
                     var sb = new StringBuilder();
                     // Adding using at start of file
                     var usingDirectives = @"using System;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Contentstack.Core;
-using Newtonsoft.Json.Linq;
 using Contentstack.Core.Models;
 using System.Collections.Generic;
 using Contentstack.Utils.Interfaces;
 ";
                     sb.AppendLine(usingDirectives);
 
-                    // Creating namespace 
+                    // Creating namespace
                     var className = "List<IEmbeddedObject>";
                     AddNameSpace($"{NameSpace}.{directoryInfo.Name}", sb);
                     // Creating Enum
                     sb.AppendLine($"    [CSJsonConverter(\"{ConverterName}\")]");
                     AddClass($"{ConverterName} : JsonConverter<{className}>", sb);
 
-                    sb.AppendLine($"         protected {className} Create(Type objectType, JArray jArray)");
+                    sb.AppendLine($"         public override {className} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)");
                     sb.AppendLine("         {");
-                    sb.AppendLine($"            return new List<IEmbeddedObject>();");
-                    sb.AppendLine("         }");
-
-                    sb.AppendLine($"         public override {className}{nullableString()} ReadJson(JsonReader reader, Type objectType, {className}{nullableString()} existingValue, bool hasExistingValue, JsonSerializer serializer)");
-                    sb.AppendLine("         {");
-                    sb.AppendLine("             JArray jArray = JArray.Load(reader);");
-                    sb.AppendLine($"             {className} target = Create(objectType, jArray);");
-                    sb.AppendLine("             foreach (JObject obj in jArray)");
+                    sb.AppendLine("             using var doc = JsonDocument.ParseValue(ref reader);");
+                    sb.AppendLine("             var jArray = JsonNode.Parse(doc.RootElement.GetRawText())!.AsArray();");
+                    sb.AppendLine("             var target = new List<IEmbeddedObject>();");
+                    sb.AppendLine("             var deserializeOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };");
+                    sb.AppendLine("             foreach (var node in jArray)");
                     sb.AppendLine("             {");
+                    sb.AppendLine("                 if (node is not JsonObject obj) continue;");
+                    sb.AppendLine("                 var ctUid = obj[\"_content_type_uid\"]?.GetValue<string>();");
 
                     var includeElse = false;
                     foreach (var contentType in _contentTypes)
                     {
-                        sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string{nullableString()})obj.GetValue(\"_content_type_uid\") == \"{contentType.Uid}\")");
+                        sb.AppendLine($"                 {(includeElse ? "else " : "")}if (ctUid == \"{contentType.Uid}\")");
                         sb.AppendLine("                 {");
-                        sb.AppendLine($"                    {FormatClassName(contentType.Title)}{nullableString()} {FirstLetterToUpperCase(contentType.Uid)} = obj.ToObject<{FormatClassName(contentType.Title)}>();");
-                        if (IsNullable)
-                        {
-                            sb.AppendLine($"                    if ({FirstLetterToUpperCase(contentType.Uid)} != null) {{");
-                        }
-                        sb.AppendLine($"                    target.Add({FirstLetterToUpperCase(contentType.Uid)});");
-                        if (IsNullable)
-                        {
-                            sb.AppendLine($"                    }}");
-                        }
+                        sb.AppendLine($"                    var {FirstLetterToUpperCase(contentType.Uid)} = JsonSerializer.Deserialize<{FormatClassName(contentType.Title)}>(obj.ToJsonString(), deserializeOptions);");
+                        sb.AppendLine($"                    if ({FirstLetterToUpperCase(contentType.Uid)} != null) target.Add({FirstLetterToUpperCase(contentType.Uid)});");
                         sb.AppendLine("                 }");
                         includeElse = true;
                     }
                     // Embedded Asset Object
-                    sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string{nullableString()})obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
+                    sb.AppendLine($"                 {(includeElse ? "else " : "")}if (ctUid == \"sys_assets\")");
                     sb.AppendLine("                 {");
-                    sb.AppendLine($"                    Asset{nullableString()} asset = obj.ToObject<Asset>();");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"                    if (asset != null) {{");
-                    }
-                    sb.AppendLine($"                    target.Add(asset);");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"                    }}");
-                    }
+                    sb.AppendLine("                    var asset = JsonSerializer.Deserialize<Asset>(obj.ToJsonString(), deserializeOptions);");
+                    sb.AppendLine("                    if (asset != null) target.Add(asset);");
                     sb.AppendLine("                 }");
 
                     sb.AppendLine("             }");
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
 
-                    sb.AppendLine($"         public override void WriteJson(JsonWriter writer, {className}{nullableString()} value, JsonSerializer serializer)");
-                    sb.AppendLine("         {");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             if (value != null) {{");
-                    }
-                    sb.AppendLine("             JToken t = JToken.FromObject(value);");
-                    sb.AppendLine("             t.WriteTo(writer);");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             }}");
-                    }
-                    sb.AppendLine("         }");
+                    sb.AppendLine($"         public override void Write(Utf8JsonWriter writer, {className} value, JsonSerializerOptions options)");
+                    sb.AppendLine("             => JsonSerializer.Serialize(writer, value, options);");
 
                     // End of namespace and Enum
                     AddEnd(sb);
