@@ -1,10 +1,27 @@
-### Version: 1.0.0-beta.1
+### Version: 1.0.0
 #### Date: 
 
-- Upgraded target framework from net7.0 to net10.0
-- Updated CI/CD pipeline to use .NET 10 SDK (actions/setup-dotnet@v4)
-- Updated Microsoft.AspNetCore.Mvc.Testing from 9.0.9 to 10.0.0
-- Fixed GetHeader method visibility (private → internal) to allow test access
+##### Breaking Changes:
+- Removed the `Newtonsoft.Json` dependency entirely. Both the tool's internals and the models/converters it generates now use `System.Text.Json`.
+- Generated model files now use `[JsonPropertyName]` instead of `[JsonProperty]`, and reference `System.Text.Json` / `System.Text.Json.Nodes` / `System.Text.Json.Serialization` instead of `Newtonsoft.Json`.
+- Generated embedded-object and modular-block converters now inherit `System.Text.Json.Serialization.JsonConverter<T>` (`Read`/`Write`) instead of Newtonsoft's `JsonConverter<T>` (`ReadJson`/`WriteJson`). Regenerating models against an existing project will change these attributes and converters - update consuming code accordingly.
+- Requires **.NET 10.0** or later (previously .NET 7.0).
+- `ContentstackException` no longer supports legacy `BinaryFormatter`-based serialization (removed the obsolete `SerializationInfo`/`StreamingContext` constructor and `GetObjectData` override).
+
+##### Enhancements:
+- Upgraded target framework from net7.0 to net10.0.
+- Updated CI/CD pipeline to use .NET 10 SDK (actions/setup-dotnet@v4).
+- Updated Microsoft.AspNetCore.Mvc.Testing from 9.0.9 to 10.0.0.
+- Migrated internal model DTOs (Field, MetaData, Contenttype, StackResponse, ContentStackError, OAuth token response) from `[JsonProperty]` to `[JsonPropertyName]`.
+- Migrated OAuthService token exchange/refresh deserialization to `System.Text.Json`.
+- Migrated the HTTP layer (IResponse, ContentstackResponse, HTTPRequestHandler, ContentstackHttpRequest) from Newtonsoft `JObject` to `System.Text.Json.Nodes.JsonObject`.
+- Migrated ContentstackClient's serializer settings, response deserialization, and error parsing to `System.Text.Json` (`JsonSerializerOptions`, `JsonNode`).
+- Migrated the code-generation templates (using statements, field attributes, link class, embedded-object converter, modular-block converter, and helper class) to emit `System.Text.Json`-based generated code.
+- Fixed reference-field type resolution (`GetDatatypeForContentType`) to use `System.Text.Json.JsonElement` instead of the removed Newtonsoft `JArray`/`JObject` types.
+
+##### Bug fix:
+- Fixed GetHeader method visibility (private → internal) to allow test access.
+- Fixed a template bug where the generated `embeddedItems` property's nullable annotation was emitted as literal text (`{nullableString()}`) instead of being applied, for content types with RTE-embedded references.
 
 ### Version: 0.5.1
 #### Date: Jan-12-2026

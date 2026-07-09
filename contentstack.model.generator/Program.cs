@@ -14,7 +14,7 @@ namespace contentstack.model.generator
         {
         }
 
-        static async Task<int> Main(string[] args)
+        internal static async Task<int> Main(string[] args)
         {
             try
             {
