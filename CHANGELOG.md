@@ -1,5 +1,5 @@
 ### Version: 1.0.0
-#### Date: 
+#### Date: July-13-2026
 
 ##### Breaking Changes:
 - Removed the `Newtonsoft.Json` dependency entirely. Both the tool's internals and the models/converters it generates now use `System.Text.Json`.

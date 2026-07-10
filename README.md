@@ -6,6 +6,17 @@ This utility is use to generate models based on ContentTypes in Stack.
 ## Requirements
 **As of v1.0.0**, this tool targets **.NET 10.0** and requires the **.NET 10.0 SDK or later**. Versions prior to v1.0.0 targeted .NET 7.0.
 
+### Compatibility
+Since v1.0.0, generated model files use `System.Text.Json` instead of `Newtonsoft.Json`. Because generated code references `Contentstack.Core.Models` and `Contentstack.Utils.Interfaces` / `ContentstackHelper` directly, your consuming project must reference System.Text.Json-based SDK versions for the generated code to compile:
+
+| Package | Minimum Version |
+|---|---|
+| `contentstack.csharp` (Delivery SDK) | `3.0.0` |
+| `contentstack.management.csharp` (Management SDK) | `1.0.0` |
+| `contentstack.utils` | `2.0.0` |
+
+Generating models into a project still referencing pre-3.0.0 / pre-1.0.0 / pre-2.0.0 (Newtonsoft-based) SDK versions will produce code that fails to compile.
+
 ## Installation
 To install Contenstack model generator run following command:
 ```
