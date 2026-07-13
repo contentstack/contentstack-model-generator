@@ -1,28 +1,28 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace contentstack.model.generator.Model
 {
     public class MetaData
     {
-        [JsonProperty(PropertyName = "ref_multiple")]
+        [JsonPropertyName("ref_multiple")]
         public bool RefMultiple { get; set; }
 
-        [JsonProperty(PropertyName = "default_value")]
+        [JsonPropertyName("default_value")]
         public object DefaultValue { get; set; }
 
-        [JsonProperty(PropertyName = "ref_multiple_content_types")]
+        [JsonPropertyName("ref_multiple_content_types")]
         public bool RefMultipleContentType { get; set; }
 
-        [JsonProperty(PropertyName = "allow_rich_text")]
+        [JsonPropertyName("allow_rich_text")]
         public bool IsRichText { get; set; }
 
-        [JsonProperty(PropertyName = "markdown")]
+        [JsonPropertyName("markdown")]
         public bool IsMarkdown { get; set; }
 
-        [JsonProperty(PropertyName = "extension")]
+        [JsonPropertyName("extension")]
         public bool IsExtension { get; set; }
 
-        [JsonProperty(PropertyName = "allow_json_rte")]
+        [JsonPropertyName("allow_json_rte")]
         public bool IsJsonRTE { get; set; }
     }
 }

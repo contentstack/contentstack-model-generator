@@ -3,6 +3,20 @@
 # Contentstack model generator
 This utility is use to generate models based on ContentTypes in Stack.
 
+## Requirements
+**As of v1.0.0**, this tool targets **.NET 10.0** and requires the **.NET 10.0 SDK or later**. Versions prior to v1.0.0 targeted .NET 7.0.
+
+### Compatibility
+Since v1.0.0, generated model files use `System.Text.Json` instead of `Newtonsoft.Json`. Because generated code references `Contentstack.Core.Models` and `Contentstack.Utils.Interfaces` / `ContentstackHelper` directly, your consuming project must reference System.Text.Json-based SDK versions for the generated code to compile:
+
+| Package | Minimum Version |
+|---|---|
+| `contentstack.csharp` (Delivery SDK) | `3.0.0` |
+| `contentstack.management.csharp` (Management SDK) | `1.0.0` |
+| `contentstack.utils` | `2.0.0` |
+
+Generating models into a project still referencing pre-3.0.0 / pre-1.0.0 / pre-2.0.0 (Newtonsoft-based) SDK versions will produce code that fails to compile.
+
 ## Installation
 To install Contenstack model generator run following command:
 ```
@@ -27,11 +41,11 @@ The Contentstack Model Generator supports two authentication methods:
 | `-A` | `--authtoken` | The Authtoken for the Content Management API (required for traditional auth) |
 | `-b` | `--branch` | The branch header in the API request to fetch or manage modules located within specific branches. |
 | `-e` | `--endpoint` | The Contentstack Host for the Content Management API |
-| `-n` | `--namespace` | The namespace the classes should be created in |
+| `-n` | `--namespace` | The namespace the classes should be created in (Default Value: ContentstackModels) |
 | `-N` | `--is-nullable` | The features that protect against throwing a System.NullReferenceException can be disruptive when turned on. |
 | `-f` | `--force` | Automatically overwrite files that already exist |
-| `-m` | `--modular-block-prefix` | The Modular block Class Prefix. |
-| `-g` | `--group-prefix` | The Group Class Prefix. |
+| `-m` | `--modular-block-prefix` | The Modular block Class Prefix. (Default Value: MB) |
+| `-g` | `--group-prefix` | The Group Class Prefix. (Default Value: Group) |
 | `-p` | `--path` | Path to the file or directory to create files in. |
 
 ### OAuth 2.0 Options
@@ -106,39 +120,71 @@ Here's what you'll see when running an OAuth command:
 
 $ contentstack.model.generator --oauth -a <api_key> --client-id myclient123 --redirect-uri http://localhost:8184
 
-Contentstack Model Generator v0.5.0
-=====================================
-
 OAuth Authentication Required
 =============================
 
 Please open the following URL in your browser to authorize the application:
 
-https://app.contentstack.com/#!/apps/6400aa06db64de001a31c8a9/authorize?response_type=code&client_id=myclient123&redirect_uri=http%3A%2F%2Flocalhost%3A8184&code_challenge=...
+https://app.contentstack.com/#!/apps/6400aa06db64de001a31c8a9/authorize?response_type=code&client_id=myclient123&redirect_uri=http%3A%2F%2Flocalhost%3A8184&code_challenge=...&code_challenge_method=S256
 
 After authorization, you will be redirected to a local URL.
 Please copy the 'code' parameter from the redirect URL and paste it here:
 
-Authorization code: [User pastes the code here]
+Authorization code: [paste the code here]
 
 Exchanging authorization code for access token...
 OAuth authentication successful!
-Access token expires at: 2024-01-15 14:30:00 UTC
-
-Fetching stack information...
-Stack: My Contentstack Stack
-API Key: api_key
-
-Fetching content types...
-Found 5 content types:
-Generating files from content type
-
-Files successfully created!
-Opening <file_path>/Models
+Access token expires at: 2026-01-15 14:30:00 UTC
+Fetching stack details for the provided API key.
+No path specified. Generating files in the current working directory: /Users/you/project.
+Fetching content types from My Contentstack Stack stack.
+Found 5 content types.
+Total content types fetched: 5.
+Fetching global fields from stack: My Contentstack Stack.
+Found 2 global fields.
+Total global fields fetched: 2.
+Generating files from content types.
+Files created successfully.
+Opening output directory: /Users/you/project.
 
 Logging out from OAuth...
 OAuth logout successful!
 ```
+
+## Generated Code
+
+**As of v1.0.0**, generated model files use **System.Text.Json** instead of Newtonsoft.Json:
+
+- Properties are decorated with `[JsonPropertyName("...")]` instead of `[JsonProperty(propertyName: "...")]`.
+- Generated files reference `System.Text.Json`, `System.Text.Json.Nodes`, and `System.Text.Json.Serialization` instead of `Newtonsoft.Json`.
+- Generated converters (for embedded objects and modular blocks) inherit `System.Text.Json.Serialization.JsonConverter<T>` and implement `Read`/`Write` instead of Newtonsoft's `JsonConverter<T>` with `ReadJson`/`WriteJson`.
+
+A generated model file looks like this:
+
+```csharp
+using System;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using Contentstack.Core.Models;
+using Contentstack.Utils.Interfaces;
+
+namespace ContentstackModels.Models
+{
+    public partial class BlogPost : IEmbeddedObject
+    {
+        public const string ContentType = "blog_post";
+        [JsonPropertyName("uid")]
+        public string Uid { get; set; }
+        [JsonPropertyName("_content_type_uid")]
+        public string ContentTypeUid { get; set; }
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
+    }
+}
+```
+
+**Breaking change:** if you regenerate models for an existing project using v1.0.0 or later, the attributes and converter base classes in the output will change from the Newtonsoft-based shape to the System.Text.Json-based shape shown above. Update your consuming code and Contentstack .NET SDK versions accordingly before regenerating.
 
 ### MIT License
 

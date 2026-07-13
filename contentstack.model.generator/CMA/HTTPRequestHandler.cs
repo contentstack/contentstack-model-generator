@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
+using System.Text.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,12 +14,10 @@ namespace contentstack.CMA
     internal class HttpRequestHandler
     {
         private readonly HttpClient _httpClient;
-        private readonly JsonSerializer _serializer;
 
         public HttpRequestHandler()
         {
             _httpClient = new HttpClient();
-            _serializer = new JsonSerializer();
         }
 
         public async Task<string> ProcessRequest(string Url, Dictionary<string, object> Headers, Dictionary<string, object> BodyJson, string FileName = null) 
@@ -37,7 +35,7 @@ namespace contentstack.CMA
                     return value;
                 }
                 else if (kvp.Value is Dictionary<string, object>)
-                    value = JsonConvert.SerializeObject(kvp.Value);
+                    value = JsonSerializer.Serialize(kvp.Value);
                 else
                     return String.Format("{0}={1}", kvp.Key, kvp.Value);
 
@@ -99,8 +97,8 @@ namespace contentstack.CMA
                     var errorContent = await response.Content.ReadAsStringAsync();
                     throw new HttpRequestException($"HTTP request failed with status code: {response.StatusCode} - {errorContent}");
                 }
-            } 
-            catch (Exception ex)
+            }
+            catch (Exception)
             {
                 throw;
             }

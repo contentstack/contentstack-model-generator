@@ -4,7 +4,8 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace contentstack.CMA.OAuth
 {
@@ -170,14 +171,15 @@ namespace contentstack.CMA.OAuth
                 
                 // Parse response
                 string responseContent = await response.Content.ReadAsStringAsync();
-                var tokenResponse = JsonConvert.DeserializeObject<OAuthTokenResponse>(responseContent);
-                
+                var serializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var tokenResponse = JsonSerializer.Deserialize<OAuthTokenResponse>(responseContent, serializerOptions);
+
                 // Set expiration time if not already set
                 if (tokenResponse.ExpiresAt == default(DateTime) && tokenResponse.ExpiresIn > 0)
                 {
                     tokenResponse.ExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn);
                 }
-                
+
                 return tokenResponse;
             }
         }
@@ -230,8 +232,9 @@ namespace contentstack.CMA.OAuth
                 
                 // Parse response
                 string responseContent = await response.Content.ReadAsStringAsync();
-                var tokenResponse = JsonConvert.DeserializeObject<OAuthTokenResponse>(responseContent);
-                
+                var serializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var tokenResponse = JsonSerializer.Deserialize<OAuthTokenResponse>(responseContent, serializerOptions);
+
                 // Set expiration time if not already set
                 if (tokenResponse.ExpiresAt == default(DateTime) && tokenResponse.ExpiresIn > 0)
                 {
@@ -408,25 +411,25 @@ namespace contentstack.CMA.OAuth
 
     public class OAuthTokenResponse
     {
-        [JsonProperty("access_token")]
+        [JsonPropertyName("access_token")]
         public string AccessToken { get; set; }
 
-        [JsonProperty("refresh_token")]
+        [JsonPropertyName("refresh_token")]
         public string RefreshToken { get; set; }
 
-        [JsonProperty("token_type")]
+        [JsonPropertyName("token_type")]
         public string TokenType { get; set; }
 
-        [JsonProperty("expires_in")]
+        [JsonPropertyName("expires_in")]
         public int ExpiresIn { get; set; }
 
-        [JsonProperty("scope")]
+        [JsonPropertyName("scope")]
         public string Scope { get; set; }
 
-        [JsonProperty("organization_uid")]
+        [JsonPropertyName("organization_uid")]
         public string OrganizationUid { get; set; }
 
-        [JsonProperty("user_uid")]
+        [JsonPropertyName("user_uid")]
         public string UserUid { get; set; }
 
         // Computed property for expiration time

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.IO;
-using System.Collections;
 using Contentstack.Model.Generator.Model;
 using contentstack.model.generator.Model;
 
@@ -14,7 +14,13 @@ namespace contentstack.CMA
 {
     public class ContentstackClient
     {
-        public JsonSerializerSettings SerializerSettings { get; set; } = new JsonSerializerSettings();
+        public JsonSerializerOptions SerializerOptions { get; set; } = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            AllowTrailingCommas = true,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        };
 
         #region Internal Variables
 
@@ -131,19 +137,18 @@ namespace contentstack.CMA
                 using (var reader = new StreamReader(stream))
                 {
                     errorMessage = reader.ReadToEnd();
-                    JObject data = JObject.Parse(errorMessage.Replace("\r\n", ""));
+                    var node = JsonNode.Parse(errorMessage.Replace("\r\n", ""));
+                    if (node is JsonObject data)
+                    {
+                        if (data["error_code"] is JsonValue ec)
+                            errorCode = ec.GetValue<int>();
 
-                    JToken token = data["error_code"];
-                    if (token != null)
-                        errorCode = token.Value<int>();
+                        if (data["error_message"] is JsonValue em)
+                            errorMessage = em.GetValue<string>();
 
-                    token = data["error_message"];
-                    if (token != null)
-                        errorMessage = token.Value<string>();
-
-                    token = data["errors"];
-                    if (token != null)
-                        errors = token.ToObject<Dictionary<string, object>>();
+                        if (data["errors"] is JsonObject errs)
+                            errors = JsonSerializer.Deserialize<Dictionary<string, object>>(errs.ToJsonString());
+                    }
 
                     var response = exResp as HttpWebResponse;
                     if (response != null)
@@ -206,11 +211,8 @@ namespace contentstack.CMA
             {
                 HttpRequestHandler RequestHandler = new HttpRequestHandler();
                 var outputResult = await RequestHandler.ProcessRequest(_StackUrl, headers, mainJson);
-                JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
-                SerializerSettings.DateFormatString = "yyyy-MM-dd";
-                var stack = data["stack"];
-                var stackJson = JsonConvert.SerializeObject(stack);
-                return JsonConvert.DeserializeObject<StackResponse>(stackJson, this.SerializerSettings);
+                var root = JsonNode.Parse(outputResult.Replace("\r\n", ""))!.AsObject();
+                return JsonSerializer.Deserialize<StackResponse>(root["stack"]!.ToJsonString(), this.SerializerOptions);
             }
             catch (Exception ex)
             {
@@ -245,13 +247,11 @@ namespace contentstack.CMA
             {
                 HttpRequestHandler RequestHandler = new HttpRequestHandler();
                 var outputResult = await RequestHandler.ProcessRequest(_Url, headers, mainJson);
-                JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
-                IList contentTypes = (IList)data["content_types"];
+                var root = JsonNode.Parse(outputResult.Replace("\r\n", ""))!.AsObject();
                 ContentstackResponse contentstackResponse = new ContentstackResponse();
-                var ContentTypeJson = JsonConvert.SerializeObject(contentTypes);
-                contentstackResponse.listContentTypes = JsonConvert.DeserializeObject<List<Contenttype>>(ContentTypeJson);
-                if (data["count"] != null) {
-                    contentstackResponse.Count = (int)data["count"];
+                contentstackResponse.listContentTypes = JsonSerializer.Deserialize<List<Contenttype>>(root["content_types"]!.ToJsonString(), this.SerializerOptions);
+                if (root["count"] is JsonValue count) {
+                    contentstackResponse.Count = count.GetValue<int>();
                 }
                 return contentstackResponse;
             }
@@ -286,13 +286,11 @@ namespace contentstack.CMA
             {
                 HttpRequestHandler RequestHandler = new HttpRequestHandler();
                 var outputResult = await RequestHandler.ProcessRequest(_GlobalFieldsUrl, headers, mainJson);
-                JObject data = JsonConvert.DeserializeObject<JObject>(outputResult.Replace("\r\n", ""), this.SerializerSettings);
-                IList globalFields = (IList)data["global_fields"];
+                var root = JsonNode.Parse(outputResult.Replace("\r\n", ""))!.AsObject();
                 ContentstackResponse contentstackResponse = new ContentstackResponse();
-                var ContentTypeJson = JsonConvert.SerializeObject(globalFields);
-                contentstackResponse.listContentTypes = JsonConvert.DeserializeObject<List<Contenttype>>(ContentTypeJson);
-                if (data["count"] != null) {
-                    contentstackResponse.Count = (int)data["count"];
+                contentstackResponse.listContentTypes = JsonSerializer.Deserialize<List<Contenttype>>(root["global_fields"]!.ToJsonString(), this.SerializerOptions);
+                if (root["count"] is JsonValue count) {
+                    contentstackResponse.Count = count.GetValue<int>();
                 }
                 return contentstackResponse;
             }
@@ -303,7 +301,7 @@ namespace contentstack.CMA
             }
         }
        
-        private Dictionary<string, object> GetHeader(Dictionary<string, object> localHeader)
+        internal Dictionary<string, object> GetHeader(Dictionary<string, object> localHeader)
         {
             Dictionary<string, object> mainHeader = _StackHeaders;
             Dictionary<string, object> classHeaders = new Dictionary<string, object>();
