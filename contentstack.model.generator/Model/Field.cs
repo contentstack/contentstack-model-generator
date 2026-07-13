@@ -1,25 +1,25 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace contentstack.model.generator.Model
 {
     public class Field
     {
-        [JsonProperty(PropertyName = "display_name")]
+        [JsonPropertyName("display_name")]
         public string DisplayName { get; set; }
 
         public string Uid { get; set; }
 
-        [JsonProperty(PropertyName = "data_type")]
+        [JsonPropertyName("data_type")]
         public string DataType { get; set; }
 
-        [JsonProperty(PropertyName = "multiple")]
+        [JsonPropertyName("multiple")]
         public bool IsMultiple { get; set; }
 
-        [JsonProperty(PropertyName = "reference_to")]
+        [JsonPropertyName("reference_to")]
         public object ReferenceTo { get; set; }
 
-        [JsonProperty(PropertyName = "field_metadata")]
+        [JsonPropertyName("field_metadata")]
         public MetaData FieldMetadata { get; set; }
 
         public List<Contenttype> Blocks { get; set; }

@@ -5,13 +5,15 @@ on:
   release:
     types: [created]
 jobs:
-  publish-nuget:  
+  publish-nuget:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v1
-      - name: Setup .NET Core @ Latest
-        uses: actions/setup-dotnet@v3
+        uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
       - name: Build solution and generate NuGet package
@@ -24,14 +26,15 @@ jobs:
           cd out
           dotnet nuget push "contentstack.model.generator.*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols true --source https://api.nuget.org/v3/index.json
 
-  publish-git:  
+  publish-git:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v1
-      - name: Setup .NET Core @ Latest
-        uses: actions/setup-dotnet@v3
+        uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
         with:
+          dotnet-version: '10.x'
           source-url: https://nuget.pkg.github.com/Contentstack/index.json
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

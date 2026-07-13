@@ -12,8 +12,7 @@ using contentstack.CMA.OAuth;
 using contentstack.model.generator.Model;
 using Contentstack.Model.Generator.Model;
 using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace contentstack.model.generator
 {
@@ -66,7 +65,7 @@ namespace contentstack.model.generator
         public string Path { get; }
 
         [Option(CommandOptionType.NoValue, ShortName = "N", LongName = "is-nullable", Description = "The features that protect against throwing a System.NullReferenceException can be disruptive when turned on.")]
-        public bool IsNullable { get; }
+        public bool IsNullable { get; internal set; }
 
         [VersionOption("0.5.1")]
         public bool Version { get; }
@@ -79,12 +78,12 @@ using System.Threading.Tasks;
 using Contentstack.Core.Models;
 using Contentstack.Utils.Models;
 using Contentstack.Utils.Interfaces;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;";
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;";
 
-        private readonly List<Contenttype> _contentTypes = new List<Contenttype>();
-        StackResponse stack;
+        internal readonly List<Contenttype> _contentTypes = new List<Contenttype>();
+        internal StackResponse stack;
 
         public async Task<int> OnExecute(CommandLineApplication app, IConsole console)
         {
@@ -206,7 +205,7 @@ using Newtonsoft.Json.Linq;";
                 }
                 Console.WriteLine(Messages.TotalGlobalFieldsFetched(totalCount));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine(Messages.ApiCommunicationError);
@@ -312,7 +311,7 @@ using Newtonsoft.Json.Linq;";
             return "object";
         }
 
-        private string GetDatatypeForField(Field field, string contentTypeName)
+        internal string GetDatatypeForField(Field field, string contentTypeName)
         {
             string dataType = GetDatatype(field, contentTypeName);
             if (field.DataType == "reference" && DateTime.Compare(stack.Settings.version, DateTime.Parse("Apr, 04 2019")) >= 0)
@@ -328,25 +327,27 @@ using Newtonsoft.Json.Linq;";
 
         private string GetDatatypeForContentType(Field field)
         {
-            if (!field.FieldMetadata.RefMultipleContentType && !field.ReferenceTo.GetType().IsArray)
+            if (field.ReferenceTo is JsonElement element)
             {
-                string referenceTo = (string)(field.ReferenceTo);
-                Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
-                if (contentType != null)
+                if (!field.FieldMetadata.RefMultipleContentType && element.ValueKind == JsonValueKind.String)
                 {
-                    return FormatClassName(contentType.Title);
-                }
-            }
-            else if (field.ReferenceTo.GetType() == typeof(JArray))
-            {
-                JArray array = field.ReferenceTo as JArray;
-                if (array.Count == 1)
-                {
-                    string referenceTo = (string)(array.First);
+                    string referenceTo = element.GetString();
                     Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
                     if (contentType != null)
                     {
                         return FormatClassName(contentType.Title);
+                    }
+                }
+                else if (element.ValueKind == JsonValueKind.Array)
+                {
+                    if (element.GetArrayLength() == 1)
+                    {
+                        string referenceTo = element[0].GetString();
+                        Contenttype contentType = _contentTypes.FirstOrDefault(c => c.Uid == referenceTo);
+                        if (contentType != null)
+                        {
+                            return FormatClassName(contentType.Title);
+                        }
                     }
                 }
             }
@@ -390,7 +391,7 @@ using Newtonsoft.Json.Linq;";
             return $"{GroupPrefix}{contentTypeName}{FormatClassName(field.DisplayName)}".Replace(" ", "");
         }
 
-        private void CreateEmbeddedObjectClass(string NameSpace, DirectoryInfo directoryInfo)
+        internal void CreateEmbeddedObjectClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             string ConverterName = "IEmbeddedObjectConverter";
             var file = shouldCreateFile(ConverterName, directoryInfo);
@@ -401,84 +402,57 @@ using Newtonsoft.Json.Linq;";
                     var sb = new StringBuilder();
                     // Adding using at start of file
                     var usingDirectives = @"using System;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Contentstack.Core;
-using Newtonsoft.Json.Linq;
 using Contentstack.Core.Models;
 using System.Collections.Generic;
 using Contentstack.Utils.Interfaces;
 ";
                     sb.AppendLine(usingDirectives);
 
-                    // Creating namespace 
+                    // Creating namespace
                     var className = "List<IEmbeddedObject>";
                     AddNameSpace($"{NameSpace}.{directoryInfo.Name}", sb);
                     // Creating Enum
                     sb.AppendLine($"    [CSJsonConverter(\"{ConverterName}\")]");
                     AddClass($"{ConverterName} : JsonConverter<{className}>", sb);
 
-                    sb.AppendLine($"         protected {className} Create(Type objectType, JArray jArray)");
+                    sb.AppendLine($"         public override {className} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)");
                     sb.AppendLine("         {");
-                    sb.AppendLine($"            return new List<IEmbeddedObject>();");
-                    sb.AppendLine("         }");
-
-                    sb.AppendLine($"         public override {className}{nullableString()} ReadJson(JsonReader reader, Type objectType, {className}{nullableString()} existingValue, bool hasExistingValue, JsonSerializer serializer)");
-                    sb.AppendLine("         {");
-                    sb.AppendLine("             JArray jArray = JArray.Load(reader);");
-                    sb.AppendLine($"             {className} target = Create(objectType, jArray);");
-                    sb.AppendLine("             foreach (JObject obj in jArray)");
+                    sb.AppendLine("             using var doc = JsonDocument.ParseValue(ref reader);");
+                    sb.AppendLine("             var jArray = JsonNode.Parse(doc.RootElement.GetRawText())!.AsArray();");
+                    sb.AppendLine("             var target = new List<IEmbeddedObject>();");
+                    sb.AppendLine("             var deserializeOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };");
+                    sb.AppendLine("             foreach (var node in jArray)");
                     sb.AppendLine("             {");
+                    sb.AppendLine("                 if (node is not JsonObject obj) continue;");
+                    sb.AppendLine("                 var ctUid = obj[\"_content_type_uid\"]?.GetValue<string>();");
 
                     var includeElse = false;
                     foreach (var contentType in _contentTypes)
                     {
-                        sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string{nullableString()})obj.GetValue(\"_content_type_uid\") == \"{contentType.Uid}\")");
+                        sb.AppendLine($"                 {(includeElse ? "else " : "")}if (ctUid == \"{contentType.Uid}\")");
                         sb.AppendLine("                 {");
-                        sb.AppendLine($"                    {FormatClassName(contentType.Title)}{nullableString()} {FirstLetterToUpperCase(contentType.Uid)} = obj.ToObject<{FormatClassName(contentType.Title)}>();");
-                        if (IsNullable)
-                        {
-                            sb.AppendLine($"                    if ({FirstLetterToUpperCase(contentType.Uid)} != null) {{");
-                        }
-                        sb.AppendLine($"                    target.Add({FirstLetterToUpperCase(contentType.Uid)});");
-                        if (IsNullable)
-                        {
-                            sb.AppendLine($"                    }}");
-                        }
+                        sb.AppendLine($"                    var {FirstLetterToUpperCase(contentType.Uid)} = JsonSerializer.Deserialize<{FormatClassName(contentType.Title)}>(obj.ToJsonString(), deserializeOptions);");
+                        sb.AppendLine($"                    if ({FirstLetterToUpperCase(contentType.Uid)} != null) target.Add({FirstLetterToUpperCase(contentType.Uid)});");
                         sb.AppendLine("                 }");
                         includeElse = true;
                     }
                     // Embedded Asset Object
-                    sb.AppendLine($"                 {(includeElse ? "else " : "")}if ((string{nullableString()})obj.GetValue(\"_content_type_uid\") == \"sys_assets\")");
+                    sb.AppendLine($"                 {(includeElse ? "else " : "")}if (ctUid == \"sys_assets\")");
                     sb.AppendLine("                 {");
-                    sb.AppendLine($"                    Asset{nullableString()} asset = obj.ToObject<Asset>();");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"                    if (asset != null) {{");
-                    }
-                    sb.AppendLine($"                    target.Add(asset);");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"                    }}");
-                    }
+                    sb.AppendLine("                    var asset = JsonSerializer.Deserialize<Asset>(obj.ToJsonString(), deserializeOptions);");
+                    sb.AppendLine("                    if (asset != null) target.Add(asset);");
                     sb.AppendLine("                 }");
 
                     sb.AppendLine("             }");
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
 
-                    sb.AppendLine($"         public override void WriteJson(JsonWriter writer, {className}{nullableString()} value, JsonSerializer serializer)");
-                    sb.AppendLine("         {");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             if (value != null) {{");
-                    }
-                    sb.AppendLine("             JToken t = JToken.FromObject(value);");
-                    sb.AppendLine("             t.WriteTo(writer);");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             }}");
-                    }
-                    sb.AppendLine("         }");
+                    sb.AppendLine($"         public override void Write(Utf8JsonWriter writer, {className} value, JsonSerializerOptions options)");
+                    sb.AppendLine("             => JsonSerializer.Serialize(writer, value, options);");
 
                     // End of namespace and Enum
                     AddEnd(sb);
@@ -490,7 +464,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private void CreateDisplayAttributeClass(string NameSpace, DirectoryInfo directoryInfo)
+        internal void CreateDisplayAttributeClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             // Create File for DisplayAttribute
             string contentstackLinkClass = "DisplayNameAttribute";
@@ -532,7 +506,7 @@ using Contentstack.Utils.Interfaces;
                 }
             }
         }
-        private void CreateLinkClass(string NameSpace, DirectoryInfo directoryInfo)
+        internal void CreateLinkClass(string NameSpace, DirectoryInfo directoryInfo)
         {
             // Create File for LinkClass
             string contentstackLinkClass = "ContentstackLink";
@@ -550,9 +524,9 @@ using Contentstack.Utils.Interfaces;
 
                     // Creating Class
                     AddClass(contentstackLinkClass, sb);
-                    sb.AppendLine($"         [JsonProperty(propertyName: \"title\")]");
+                    sb.AppendLine($"         [JsonPropertyName(\"title\")]");
                     sb.AppendLine($"         public string{nullableString()} Title {{ get; set; }}");
-                    sb.AppendLine($"         [JsonProperty(propertyName: \"href\")]");
+                    sb.AppendLine($"         [JsonPropertyName(\"href\")]");
                     sb.AppendLine($"         public string{nullableString()} Href {{ get; set; }}");
 
                     // End of namespace and class
@@ -668,7 +642,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private Boolean findRTEReference(List<Field> Schema)
+        internal Boolean findRTEReference(List<Field> Schema)
         {
             if (Schema == null)
             {
@@ -696,7 +670,7 @@ using Contentstack.Utils.Interfaces;
             return fields.Count > 0;
         }
 
-        private void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo)
+        internal void CreateFile(string contentTypeName, string nameSpace, Contenttype contentType, DirectoryInfo directoryInfo)
         {
 
             Console.WriteLine(Messages.ExtractingModularBlocksInContentType(contentTypeName));
@@ -741,9 +715,9 @@ using Contentstack.Utils.Interfaces;
 
                     // Add Const
                     sb.AppendLine($"        public const string ContentType = \"{contentType.Uid}\";");
-                    sb.AppendLine($"        [JsonProperty(propertyName: \"uid\")]");
+                    sb.AppendLine($"        [JsonPropertyName(\"uid\")]");
                     sb.AppendLine($"        public string{nullableString()} Uid {{ get; set; }}");
-                    sb.AppendLine($"        [JsonProperty(propertyName: \"_content_type_uid\")]");
+                    sb.AppendLine($"        [JsonPropertyName(\"_content_type_uid\")]");
                     sb.AppendLine($"        public string{nullableString()} ContentTypeUid {{ get; set; }}");
 
                     //Adding Params to contentType
@@ -751,8 +725,8 @@ using Contentstack.Utils.Interfaces;
 
                     if (fields)
                     {
-                        sb.AppendLine($"        [JsonProperty(propertyName: \"_embedded_items\")]");
-                        sb.AppendLine("        public Dictionary<string, List<IEmbeddedObject>>{nullableString()} embeddedItems { get; set; }");
+                        sb.AppendLine($"        [JsonPropertyName(\"_embedded_items\")]");
+                        sb.AppendLine($"        public Dictionary<string, List<IEmbeddedObject>>{nullableString()} embeddedItems {{ get; set; }}");
                     }
 
                     // End of namespace and class
@@ -871,11 +845,11 @@ using Contentstack.Utils.Interfaces;
             return new Tuple<string, string, DirectoryInfo, List<Field>>(usingDirective, NameSpace, directory, fields);
         }
 
-        private void AddParams(string contentType, List<Field> schema, in StringBuilder sb)
+        internal void AddParams(string contentType, List<Field> schema, in StringBuilder sb)
         {
             foreach (var field in schema)
             {
-                sb.AppendLine($"        [JsonProperty(propertyName: \"{field.Uid}\")]");
+                sb.AppendLine($"        [JsonPropertyName(\"{field.Uid}\")]");
                 if (field.DataType == "text" && field.FieldMetadata.IsMarkdown)
                 {
                     sb.AppendLine($"        public {GetDatatypeForField(field, contentType)} {FirstLetterToUpperCase(field.Uid)} {{");
@@ -1051,7 +1025,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private void CreateHelperClass(string nameSpace, DirectoryInfo directoryInfo)
+        internal void CreateHelperClass(string nameSpace, DirectoryInfo directoryInfo)
         {
             string className = "ContentstackHelper";
             FileInfo file = shouldCreateFile(className, directoryInfo);
@@ -1084,7 +1058,7 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine("        }");
 
 
-                    sb.AppendLine("        public static bool FieldExists(string fieldName, JObject jObject)");
+                    sb.AppendLine("        public static bool FieldExists(string fieldName, JsonObject jObject)");
                     sb.AppendLine("        {");
                     sb.AppendLine("            return jObject[fieldName] != null;");
                     sb.AppendLine("        }");
@@ -1097,7 +1071,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private void CreateStringHelperClass(string nameSpace, DirectoryInfo directoryInfo)
+        internal void CreateStringHelperClass(string nameSpace, DirectoryInfo directoryInfo)
         {
             string className = "ContentstackStringExtension";
             FileInfo file = shouldCreateFile(className, directoryInfo);
@@ -1147,7 +1121,7 @@ using Contentstack.Utils.Interfaces;
             }
         }
 
-        private void CreateModularBlockConverter(string nameSpace, string className, Dictionary<string, string> blockTypes, DirectoryInfo directoryInfo)
+        internal void CreateModularBlockConverter(string nameSpace, string className, Dictionary<string, string> blockTypes, DirectoryInfo directoryInfo)
         {
             FileInfo file = shouldCreateFile($"{className}Converter", directoryInfo);
 
@@ -1158,19 +1132,18 @@ using Contentstack.Utils.Interfaces;
                     var sb = new StringBuilder();
 
                     sb.AppendLine("using System;");
-                    sb.AppendLine("using Newtonsoft.Json;");
-                    sb.AppendLine("using System.Reflection;");
-                    sb.AppendLine("using Newtonsoft.Json.Linq;");
-                    sb.AppendLine("using System.ComponentModel;");
+                    sb.AppendLine("using System.Text.Json;");
+                    sb.AppendLine("using System.Text.Json.Nodes;");
+                    sb.AppendLine("using System.Text.Json.Serialization;");
                     sb.AppendLine("using Contentstack.Core;");
-                    // Creating namespace 
+                    // Creating namespace
                     AddNameSpace($"{nameSpace}.{directoryInfo.Name}", sb);
                     // Creating Enum
                     var ConverterName = $"{className}Converter";
                     sb.AppendLine($"    [CSJsonConverter(\"{ConverterName}\")]");
                     AddClass($"{ConverterName} : JsonConverter<{className}>", sb);
 
-                    sb.AppendLine($"        protected {className} Create(Type objectType, JObject jObject)");
+                    sb.AppendLine($"        protected {className} Create(Type objectType, JsonObject jObject)");
                     sb.AppendLine("        {");
                     foreach (var blocks in blockTypes)
                     {
@@ -1186,35 +1159,30 @@ using Contentstack.Utils.Interfaces;
                     sb.AppendLine($"        return new {className}();");
                     sb.AppendLine("        }");
 
-                    sb.AppendLine($"        public override {className}{nullableString()} ReadJson(JsonReader reader, Type objectType, {className}{nullableString()} existingValue, bool hasExistingValue, JsonSerializer serializer)");
+                    sb.AppendLine($"        public override {className}{nullableString()} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)");
                     sb.AppendLine("        {");
-                    sb.AppendLine("             JObject jObject = JObject.Load(reader);");
-                    sb.AppendLine($"             {className} target = Create(objectType, jObject);");
-                    sb.AppendLine("             var token = jObject.GetValue(ContentstackHelper.GetDescription(target.BlockType));");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             if (token != null) {{");
-                    }
-                    sb.AppendLine("             serializer.Populate(token.CreateReader(), target);");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             }}");
-                    }
+                    sb.AppendLine("             using var doc = JsonDocument.ParseValue(ref reader);");
+                    sb.AppendLine("             var jObject = JsonNode.Parse(doc.RootElement.GetRawText())!.AsObject();");
+                    sb.AppendLine($"             {className} target = Create(typeToConvert, jObject);");
+                    sb.AppendLine("             var token = jObject[ContentstackHelper.GetDescription(target.BlockType)];");
+                    sb.AppendLine("             if (token != null)");
+                    sb.AppendLine("             {");
+                    sb.AppendLine($"                 var filled = JsonSerializer.Deserialize(token.ToJsonString(), target.GetType(), new JsonSerializerOptions {{ PropertyNameCaseInsensitive = true }}) as {className};");
+                    sb.AppendLine("                 if (filled != null)");
+                    sb.AppendLine("                 {");
+                    sb.AppendLine("                     filled.BlockType = target.BlockType;");
+                    sb.AppendLine("                     return filled;");
+                    sb.AppendLine("                 }");
+                    sb.AppendLine("             }");
                     sb.AppendLine("             return target;");
                     sb.AppendLine("         }");
 
-                    sb.AppendLine($"        public override void WriteJson(JsonWriter writer, {className}{nullableString()} value, JsonSerializer serializer)");
+                    sb.AppendLine($"        public override void Write(Utf8JsonWriter writer, {className}{nullableString()} value, JsonSerializerOptions options)");
                     sb.AppendLine("        {");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             if (value != null) {{");
-                    }
-                    sb.AppendLine("             JToken t = JToken.FromObject(value);");
-                    sb.AppendLine("             t.WriteTo(writer);");
-                    if (IsNullable)
-                    {
-                        sb.AppendLine($"             }}");
-                    }
+                    sb.AppendLine("             if (value != null)");
+                    sb.AppendLine("             {");
+                    sb.AppendLine("                 JsonSerializer.Serialize(writer, value, options);");
+                    sb.AppendLine("             }");
                     sb.AppendLine("        }");
 
                     // End of namespace and Enum

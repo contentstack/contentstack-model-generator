@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using contentstack.CMA.OAuth;
 using Xunit;
 
@@ -61,8 +62,9 @@ namespace contentstack.model.generator.tests
             };
 
             
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(response);
-            var deserializedResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<OAuthTokenResponse>(json);
+            var json = JsonSerializer.Serialize(response);
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var deserializedResponse = JsonSerializer.Deserialize<OAuthTokenResponse>(json, options);
 
             
             Assert.NotNull(deserializedResponse);

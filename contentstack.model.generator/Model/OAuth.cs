@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using contentstack.model.generator.Model;
 
 namespace Contentstack.Model.Generator.Model
@@ -11,7 +11,7 @@ namespace Contentstack.Model.Generator.Model
     public class OAuthAppAuthorizationResponse
     {
 
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public OAuthAppAuthorizationData[] Data { get; set; }
     }
 
@@ -21,11 +21,11 @@ namespace Contentstack.Model.Generator.Model
     public class OAuthAppAuthorizationData
     {
 
-        [JsonProperty("authorization_uid")]
+        [JsonPropertyName("authorization_uid")]
         public string AuthorizationUid { get; set; }
 
 
-        [JsonProperty("user")]
+        [JsonPropertyName("user")]
         public OAuthUser User { get; set; }
     }
 
@@ -33,7 +33,7 @@ namespace Contentstack.Model.Generator.Model
     public class OAuthUser
     {
 
-        [JsonProperty("uid")]
+        [JsonPropertyName("uid")]
         public string Uid { get; set; }
     }
 
@@ -178,23 +178,23 @@ namespace Contentstack.Model.Generator.Model
     public class OAuthResponse
     {
 
-        [JsonProperty("access_token")]
+        [JsonPropertyName("access_token")]
         public string AccessToken { get; set; }
 
 
-        [JsonProperty("refresh_token")]
+        [JsonPropertyName("refresh_token")]
         public string RefreshToken { get; set; }
 
 
-        [JsonProperty("expires_in")]
+        [JsonPropertyName("expires_in")]
         public int ExpiresIn { get; set; }
 
 
-        [JsonProperty("organization_uid")]
+        [JsonPropertyName("organization_uid")]
         public string OrganizationUid { get; set; }
 
 
-        [JsonProperty("user_uid")]
+        [JsonPropertyName("user_uid")]
         public string UserUid { get; set; }
     }
     /// <summary>
