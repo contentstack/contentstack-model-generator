@@ -11,6 +11,7 @@ namespace contentstack.model.generator.tests
         {
             var stack = new StackResponse
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 APIKey = "test_api_key",
                 Name = "My Stack",
                 MasterLocale = "en-us",

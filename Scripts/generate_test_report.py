@@ -55,6 +55,7 @@ class TestReportGenerator:
         self.coverage = None
 
     def parse_trx(self):
+        # deepcode ignore InsecureXmlParser: test-report generation script, trusted local XML input
         tree = ET.parse(self.trx_file)
         root = tree.getroot()
 
@@ -117,6 +118,7 @@ class TestReportGenerator:
         if not self.coverage_file or not os.path.exists(self.coverage_file):
             return
 
+        # deepcode ignore InsecureXmlParser: test-report generation script, trusted local XML input
         tree = ET.parse(self.coverage_file)
         root = tree.getroot()
 

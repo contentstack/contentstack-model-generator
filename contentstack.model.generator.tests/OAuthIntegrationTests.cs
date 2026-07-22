@@ -70,6 +70,7 @@ namespace contentstack.model.generator.tests
             {
                 Host = "api.contentstack.io",
                 OAuthClientId = "test_client_id",
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 OAuthClientSecret = "test_client_secret",
                 OAuthRedirectUri = "http://localhost:8080",
                 OAuthAppId = "test_app_id"
