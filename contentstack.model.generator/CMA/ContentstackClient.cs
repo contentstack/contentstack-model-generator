@@ -62,6 +62,7 @@ namespace contentstack.CMA
         }
         private readonly Dictionary<string, object> _StackHeaders = new Dictionary<string, object>();
 
+        // deepcode ignore NoHardcodedCredentials: false positive - method signature/parameter names, no actual hardcoded credential
         public void SetHeader(string key, string value)
         {
             if (key != null && value != null)

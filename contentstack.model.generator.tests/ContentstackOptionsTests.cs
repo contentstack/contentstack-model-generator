@@ -35,6 +35,7 @@ namespace contentstack.model.generator.tests
             var options = new ContentstackOptions();
             var testDate = DateTime.UtcNow.AddHours(1);
             var testScopes = new[] { "read", "write" };
+            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
             options.ApiKey = "test_api_key";
             options.Authtoken = "test_authtoken";
             options.Host = "api.contentstack.io";
@@ -43,6 +44,7 @@ namespace contentstack.model.generator.tests
             options.IsOAuth = true;
             options.Authorization = "Bearer test_token";
             options.OAuthClientId = "test_client_id";
+            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
             options.OAuthClientSecret = "test_client_secret";
             options.OAuthRedirectUri = "http://localhost:8080";
             options.OAuthAppId = "test_app_id";

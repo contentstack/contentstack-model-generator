@@ -13,6 +13,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io",
                 IsOAuth = true,
@@ -36,6 +37,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io",
                 IsOAuth = false,
@@ -64,6 +66,7 @@ namespace contentstack.model.generator.tests
 
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
@@ -84,6 +87,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = inputHost
             };
@@ -101,6 +105,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
@@ -127,6 +132,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
@@ -146,6 +152,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
@@ -171,6 +178,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
@@ -194,6 +202,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
@@ -214,6 +223,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
@@ -239,6 +249,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };
@@ -267,6 +278,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 Host = "api.contentstack.io"
             };

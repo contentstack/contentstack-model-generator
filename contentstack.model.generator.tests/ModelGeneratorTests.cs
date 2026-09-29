@@ -143,6 +143,7 @@ namespace contentstack.model.generator.tests
         public void CreateContentstackOptions_WithTraditionalAuth_ShouldSetCorrectProperties()
         {
             
+            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
             _modelGenerator.ApiKey = "test_api_key";
             _modelGenerator.Authtoken = "test_authtoken";
             _modelGenerator.Host = "api.contentstack.io";
@@ -166,11 +167,13 @@ namespace contentstack.model.generator.tests
         public void CreateContentstackOptions_WithOAuth_ShouldSetCorrectProperties()
         {
             
+            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
             _modelGenerator.ApiKey = "test_api_key";
             _modelGenerator.Host = "api.contentstack.io";
             _modelGenerator.Branch = "main";
             _modelGenerator.UseOAuth = true;
             _modelGenerator.OAuthClientId = "test_client_id";
+            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
             _modelGenerator.OAuthClientSecret = "test_client_secret";
             _modelGenerator.OAuthRedirectUri = "http://localhost:8080";
             _modelGenerator.OAuthAppId = "test_app_id";
@@ -195,6 +198,7 @@ namespace contentstack.model.generator.tests
         public void CreateContentstackOptions_WithOAuthAndNoScopes_ShouldSetScopesToNull()
         {
             
+            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
             _modelGenerator.ApiKey = "test_api_key";
             _modelGenerator.Host = "api.contentstack.io";
             _modelGenerator.UseOAuth = true;
@@ -283,6 +287,7 @@ namespace contentstack.model.generator.tests
         {
             
             _modelGenerator.UseOAuth = true;
+            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
             _modelGenerator.ApiKey = "test_api_key";
             _modelGenerator.Host = "api.contentstack.io";
             _modelGenerator.OAuthClientId = "test_client_id";
@@ -310,12 +315,14 @@ namespace contentstack.model.generator.tests
 
             return new ContentstackOptions
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = _modelGenerator.ApiKey,
                 Authtoken = _modelGenerator.Authtoken,
                 Host = _modelGenerator.Host,
                 Branch = _modelGenerator.Branch,
                 IsOAuth = _modelGenerator.UseOAuth,
                 OAuthClientId = _modelGenerator.OAuthClientId,
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 OAuthClientSecret = _modelGenerator.OAuthClientSecret,
                 OAuthRedirectUri = _modelGenerator.OAuthRedirectUri,
                 OAuthAppId = _modelGenerator.OAuthAppId,

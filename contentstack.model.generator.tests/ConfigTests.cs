@@ -90,6 +90,7 @@ namespace contentstack.model.generator.tests
         {
             var config = new Config
             {
+                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = "test_api_key",
                 AppUid = "test_app_uid",
                 AuthToken = "test_auth_token"
