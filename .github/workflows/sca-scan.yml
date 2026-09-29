@@ -2,24 +2,43 @@ name: Source Composition Analysis Scan
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+permissions: {}
 jobs:
-  security-sca:
+  # Runs the scan with a read-only token; third-party actions never see a write token.
+  snyk-scan:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Run Dotnet Restore
         run: |
           dotnet restore ./contentstack.model.generator/contentstack.model.generator.sln
           dotnet restore ./contentstack.model.generator.tests/contentstack.model.generator.tests.csproj
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/dotnet@master
+        uses: snyk/actions/dotnet@12140f4059e244892ae643824a95459a102120dd # master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --fail-on=all --all-projects --json-file-output=snyk.json
-          json: true
         continue-on-error: true
-      - uses: contentstack/sca-policy@main
+      - name: Upload Snyk results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: snyk-results
+          path: snyk.json
+          if-no-files-found: error
+          retention-days: 1
+
+  # Evaluates the results and comments on the PR; only this job gets pull-requests: write.
+  security-sca:
+    needs: snyk-scan
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Download Snyk results
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: snyk-results
+      - uses: contentstack/sca-policy@673d5e9df08f06a9e3a30beb31065c750c64cb24 # main
