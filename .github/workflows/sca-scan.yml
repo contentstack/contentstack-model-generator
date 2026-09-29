@@ -10,12 +10,16 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@master
+      - name: Run Dotnet Restore
+        run: |
+          dotnet restore ./contentstack.model.generator/contentstack.model.generator.sln
+          dotnet restore ./contentstack.model.generator.tests/contentstack.model.generator.tests.csproj
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/dotnet@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --fail-on=all
+          args: --fail-on=all --all-projects
           json: true
         continue-on-error: true
       - uses: contentstack/sca-policy@main
