@@ -90,13 +90,12 @@ namespace contentstack.model.generator.tests
         {
             var config = new Config
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 AppUid = "test_app_uid",
                 AuthToken = "test_auth_token"
             };
 
-            Assert.Equal("test_api_key", config.ApiKey);
+            Assert.Equal(TestSecrets.ApiKey, config.ApiKey);
             Assert.Equal("test_app_uid", config.AppUid);
             Assert.Equal("test_auth_token", config.AuthToken);
         }

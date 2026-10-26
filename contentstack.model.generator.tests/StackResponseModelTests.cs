@@ -11,15 +11,14 @@ namespace contentstack.model.generator.tests
         {
             var stack = new StackResponse
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                APIKey = "test_api_key",
+                APIKey = TestSecrets.ApiKey,
                 Name = "My Stack",
                 MasterLocale = "en-us",
                 Uid = "stack_uid_123",
                 Description = "A test stack"
             };
 
-            Assert.Equal("test_api_key", stack.APIKey);
+            Assert.Equal(TestSecrets.ApiKey, stack.APIKey);
             Assert.Equal("My Stack", stack.Name);
             Assert.Equal("en-us", stack.MasterLocale);
             Assert.Equal("stack_uid_123", stack.Uid);
