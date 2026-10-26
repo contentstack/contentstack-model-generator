@@ -13,8 +13,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io",
                 IsOAuth = true,
                 Authorization = "Bearer test_access_token",
@@ -28,7 +27,7 @@ namespace contentstack.model.generator.tests
 
             
             Assert.NotNull(client);
-            Assert.Equal("test_api_key", client.StackApiKey);
+            Assert.Equal(TestSecrets.ApiKey, client.StackApiKey);
         }
 
         [Fact]
@@ -37,8 +36,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io",
                 IsOAuth = false,
                 Authtoken = "test_authtoken"
@@ -49,7 +47,7 @@ namespace contentstack.model.generator.tests
 
             
             Assert.NotNull(client);
-            Assert.Equal("test_api_key", client.StackApiKey);
+            Assert.Equal(TestSecrets.ApiKey, client.StackApiKey);
         }
 
         [Fact]
@@ -66,8 +64,7 @@ namespace contentstack.model.generator.tests
 
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
 
@@ -87,8 +84,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = inputHost
             };
 
@@ -105,8 +101,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
             var client = new ContentstackClient(options);
@@ -132,8 +127,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
             var client = new ContentstackClient(options);
@@ -152,8 +146,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
             var client = new ContentstackClient(options);
@@ -178,8 +171,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
             var client = new ContentstackClient(options);
@@ -202,8 +194,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
             var client = new ContentstackClient(options);
@@ -223,8 +214,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
             var client = new ContentstackClient(options);
@@ -249,8 +239,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
             var client = new ContentstackClient(options);
@@ -278,8 +267,7 @@ namespace contentstack.model.generator.tests
             
             var options = new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-                ApiKey = "test_api_key",
+                ApiKey = TestSecrets.ApiKey,
                 Host = "api.contentstack.io"
             };
             var client = new ContentstackClient(options);

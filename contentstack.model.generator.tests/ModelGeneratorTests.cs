@@ -143,14 +143,13 @@ namespace contentstack.model.generator.tests
         public void CreateContentstackOptions_WithTraditionalAuth_ShouldSetCorrectProperties()
         {
             
-            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-            _modelGenerator.ApiKey = "test_api_key";
+            _modelGenerator.ApiKey = TestSecrets.ApiKey;
             _modelGenerator.Authtoken = "test_authtoken";
             _modelGenerator.Host = "api.contentstack.io";
             _modelGenerator.Branch = "main";
             _modelGenerator.UseOAuth = false;
             var options = CreateContentstackOptionsFromModelGenerator();
-            Assert.Equal("test_api_key", options.ApiKey);
+            Assert.Equal(TestSecrets.ApiKey, options.ApiKey);
             Assert.Equal("test_authtoken", options.Authtoken);
             Assert.Equal("api.contentstack.io", options.Host);
             Assert.Equal("main", options.Branch);
@@ -167,24 +166,22 @@ namespace contentstack.model.generator.tests
         public void CreateContentstackOptions_WithOAuth_ShouldSetCorrectProperties()
         {
             
-            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-            _modelGenerator.ApiKey = "test_api_key";
+            _modelGenerator.ApiKey = TestSecrets.ApiKey;
             _modelGenerator.Host = "api.contentstack.io";
             _modelGenerator.Branch = "main";
             _modelGenerator.UseOAuth = true;
             _modelGenerator.OAuthClientId = "test_client_id";
-            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-            _modelGenerator.OAuthClientSecret = "test_client_secret";
+            _modelGenerator.OAuthClientSecret = TestSecrets.ClientSecret;
             _modelGenerator.OAuthRedirectUri = "http://localhost:8080";
             _modelGenerator.OAuthAppId = "test_app_id";
             _modelGenerator.OAuthScopes = "read write admin";
             var options = CreateContentstackOptionsFromModelGenerator();            
-            Assert.Equal("test_api_key", options.ApiKey);
+            Assert.Equal(TestSecrets.ApiKey, options.ApiKey);
             Assert.Equal("api.contentstack.io", options.Host);
             Assert.Equal("main", options.Branch);
             Assert.True(options.IsOAuth);
             Assert.Equal("test_client_id", options.OAuthClientId);
-            Assert.Equal("test_client_secret", options.OAuthClientSecret);
+            Assert.Equal(TestSecrets.ClientSecret, options.OAuthClientSecret);
             Assert.Equal("http://localhost:8080", options.OAuthRedirectUri);
             Assert.Equal("test_app_id", options.OAuthAppId);
             Assert.NotNull(options.OAuthScopes);
@@ -198,8 +195,7 @@ namespace contentstack.model.generator.tests
         public void CreateContentstackOptions_WithOAuthAndNoScopes_ShouldSetScopesToNull()
         {
             
-            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-            _modelGenerator.ApiKey = "test_api_key";
+            _modelGenerator.ApiKey = TestSecrets.ApiKey;
             _modelGenerator.Host = "api.contentstack.io";
             _modelGenerator.UseOAuth = true;
             _modelGenerator.OAuthClientId = "test_client_id";
@@ -287,8 +283,7 @@ namespace contentstack.model.generator.tests
         {
             
             _modelGenerator.UseOAuth = true;
-            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-            _modelGenerator.ApiKey = "test_api_key";
+            _modelGenerator.ApiKey = TestSecrets.ApiKey;
             _modelGenerator.Host = "api.contentstack.io";
             _modelGenerator.OAuthClientId = "test_client_id";
             _modelGenerator.OAuthRedirectUri = "http://localhost:8080";
@@ -315,14 +310,12 @@ namespace contentstack.model.generator.tests
 
             return new ContentstackOptions
             {
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 ApiKey = _modelGenerator.ApiKey,
                 Authtoken = _modelGenerator.Authtoken,
                 Host = _modelGenerator.Host,
                 Branch = _modelGenerator.Branch,
                 IsOAuth = _modelGenerator.UseOAuth,
                 OAuthClientId = _modelGenerator.OAuthClientId,
-                // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
                 OAuthClientSecret = _modelGenerator.OAuthClientSecret,
                 OAuthRedirectUri = _modelGenerator.OAuthRedirectUri,
                 OAuthAppId = _modelGenerator.OAuthAppId,
