@@ -35,8 +35,7 @@ namespace contentstack.model.generator.tests
             var options = new ContentstackOptions();
             var testDate = DateTime.UtcNow.AddHours(1);
             var testScopes = new[] { "read", "write" };
-            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-            options.ApiKey = "test_api_key";
+            options.ApiKey = TestSecrets.ApiKey;
             options.Authtoken = "test_authtoken";
             options.Host = "api.contentstack.io";
             options.Branch = "main";
@@ -44,15 +43,14 @@ namespace contentstack.model.generator.tests
             options.IsOAuth = true;
             options.Authorization = "Bearer test_token";
             options.OAuthClientId = "test_client_id";
-            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-            options.OAuthClientSecret = "test_client_secret";
+            options.OAuthClientSecret = TestSecrets.ClientSecret;
             options.OAuthRedirectUri = "http://localhost:8080";
             options.OAuthAppId = "test_app_id";
             options.OAuthScopes = testScopes;
             options.AccessToken = "test_access_token";
             options.RefreshToken = "test_refresh_token";
             options.TokenExpiresAt = testDate;
-            Assert.Equal("test_api_key", options.ApiKey);
+            Assert.Equal(TestSecrets.ApiKey, options.ApiKey);
             Assert.Equal("test_authtoken", options.Authtoken);
             Assert.Equal("api.contentstack.io", options.Host);
             Assert.Equal("main", options.Branch);
@@ -60,7 +58,7 @@ namespace contentstack.model.generator.tests
             Assert.True(options.IsOAuth);
             Assert.Equal("Bearer test_token", options.Authorization);
             Assert.Equal("test_client_id", options.OAuthClientId);
-            Assert.Equal("test_client_secret", options.OAuthClientSecret);
+            Assert.Equal(TestSecrets.ClientSecret, options.OAuthClientSecret);
             Assert.Equal("http://localhost:8080", options.OAuthRedirectUri);
             Assert.Equal("test_app_id", options.OAuthAppId);
             Assert.Equal(testScopes, options.OAuthScopes);

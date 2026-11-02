@@ -32,7 +32,7 @@ namespace contentstack.model.generator.tests
             var headers = new Dictionary<string, object>
             {
                 { "Authorization", "Bearer test_access_token_123" },
-                { "api_key", "test_api_key" }
+                { "api_key", TestSecrets.ApiKey }
             };
             var bodyJson = new Dictionary<string, object>
             {
@@ -52,7 +52,7 @@ namespace contentstack.model.generator.tests
             var headers = new Dictionary<string, object>
             {
                 { "Authorization", "test_access_token_123" }, // No "Bearer " prefix
-                { "api_key", "test_api_key" }
+                { "api_key", TestSecrets.ApiKey }
             };
             var bodyJson = new Dictionary<string, object>
             {
@@ -100,7 +100,7 @@ namespace contentstack.model.generator.tests
             var url = "https://api.contentstack.io/v3/stacks";
             var headers = new Dictionary<string, object>
             {
-                { "api_key", "test_api_key" }
+                { "api_key", TestSecrets.ApiKey }
             };
             var bodyJson = new Dictionary<string, object>
             {
@@ -118,7 +118,7 @@ namespace contentstack.model.generator.tests
             var url = "https://api.contentstack.io/v3/stacks";
             var headers = new Dictionary<string, object>
             {
-                { "api_key", "test_api_key" }
+                { "api_key", TestSecrets.ApiKey }
             };
             var bodyJson = new Dictionary<string, object>
             {
@@ -136,7 +136,7 @@ namespace contentstack.model.generator.tests
             var url = "https://api.contentstack.io/v3/stacks";
             var headers = new Dictionary<string, object>
             {
-                { "api_key", "test_api_key" }
+                { "api_key", TestSecrets.ApiKey }
             };
             var bodyJson = new Dictionary<string, object>();
 
@@ -151,7 +151,7 @@ namespace contentstack.model.generator.tests
             var url = "https://api.contentstack.io/v3/stacks";
             var headers = new Dictionary<string, object>
             {
-                { "api_key", "test_api_key" }
+                { "api_key", TestSecrets.ApiKey }
             };
             Dictionary<string, object> bodyJson = null;
 
@@ -166,7 +166,7 @@ namespace contentstack.model.generator.tests
             var url = "invalid-url";
             var headers = new Dictionary<string, object>
             {
-                { "api_key", "test_api_key" }
+                { "api_key", TestSecrets.ApiKey }
             };
             var bodyJson = new Dictionary<string, object>
             {
@@ -184,7 +184,7 @@ namespace contentstack.model.generator.tests
             var url = "https://api.contentstack.io/v3/stacks";
             var headers = new Dictionary<string, object>
             {
-                { "api_key", "test_api_key" }
+                { "api_key", TestSecrets.ApiKey }
             };
             var bodyJson = new Dictionary<string, object>
             {
