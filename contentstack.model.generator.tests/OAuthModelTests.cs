@@ -179,8 +179,7 @@ namespace contentstack.model.generator.tests
         [Fact]
         public void IsValid_NonPkceWithClientSecret_ReturnsTrue()
         {
-            // deepcode ignore NoHardcodedCredentials: test fixture value, not a real secret
-            var options = new OAuthOptions { ClientSecret = "a-real-secret" };
+            var options = new OAuthOptions { ClientSecret = TestSecrets.ClientSecret };
 
             Assert.True(options.IsValid());
         }
